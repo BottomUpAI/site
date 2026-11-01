@@ -1,0 +1,5 @@
+# Link checking. CI runs it twice: --offline on every PR (internal links in
+# dist/), and weekly against external links (links-external.yaml).
+include_fragments = "full"
+max_retries = 3
+accept = ["200..=299", "429"]
