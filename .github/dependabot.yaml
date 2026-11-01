@@ -1,0 +1,17 @@
+# No auto-merge here: the auto-merge workflow needs the GitHub App token, which
+# only the terraform repo's admin role can read. Dependency PRs are merged by hand.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
