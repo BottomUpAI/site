@@ -1,15 +1,20 @@
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 
-const root = fileURLToPath(new URL("../..", import.meta.url));
+const script = fileURLToPath(new URL("../../scripts/deploy.sh", import.meta.url));
 
 // Runs scripts/deploy.sh with a stub `aws` on PATH that records its arguments,
-// under /bin/bash (3.2 on macOS, 5.x on CI runners). Needs a built dist/.
+// under /bin/bash (3.2 on macOS, 5.x on CI runners), in a scratch directory
+// holding a minimal dist/.
 function deploy(...args: string[]) {
+  const cwd = mkdtempSync(join(tmpdir(), "deploy-"));
+  mkdirSync(join(cwd, "dist"));
+  writeFileSync(join(cwd, "dist", "index.html"), "<!doctype html>");
+  writeFileSync(join(cwd, "dist", "404.html"), "<!doctype html>");
   const bin = mkdtempSync(join(tmpdir(), "aws-stub-"));
   const log = join(bin, "calls.log");
   writeFileSync(
@@ -17,8 +22,8 @@ function deploy(...args: string[]) {
     `#!/bin/sh\necho "$*" >> "${log}"\ncase "$*" in *create-invalidation*) echo I123;; esac\n`,
   );
   chmodSync(join(bin, "aws"), 0o755);
-  const r = spawnSync("/bin/bash", ["scripts/deploy.sh", ...args], {
-    cwd: root,
+  const r = spawnSync("/bin/bash", [script, ...args], {
+    cwd,
     encoding: "utf8",
     env: { ...process.env, PATH: `${bin}:${process.env["PATH"]}`, SITE_BUCKET: "b", SITE_DISTRIBUTION_ID: "D" },
   });
