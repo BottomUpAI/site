@@ -26,7 +26,8 @@ for (const { name, path } of PAGES) {
   test(`${name}: long URLs, emails and words wrap at 320px`, async ({ page }) => {
     await page.goto(path, { waitUntil: "networkidle" });
     const { scrollWidth, clientWidth } = await page.evaluate((tokens) => {
-      for (const el of document.querySelectorAll("h1, h2, p, li, a, span, mark, time")) {
+      // Not <time>: dates are schema-validated YYYY or YYYY-MM.
+      for (const el of document.querySelectorAll("h1, h2, p, li, a, span, mark")) {
         el.append(document.createTextNode(tokens));
       }
       return {
@@ -35,5 +36,23 @@ for (const { name, path } of PAGES) {
       };
     }, LONG_TOKENS);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+  });
+}
+
+// Dates in the timeline are short and must never break across lines.
+for (const width of [320, 1280]) {
+  test(`about: timeline dates stay on one line at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/about/", { waitUntil: "networkidle" });
+    const lines = await page.locator(".timeline time").evaluateAll((times) =>
+      // Count the text's line boxes: the element itself stretches to its grid row.
+      times.map((t) => {
+        const range = document.createRange();
+        range.selectNodeContents(t);
+        return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+      }),
+    );
+    test.skip(lines.length === 0, "the timeline has no entries yet");
+    expect(lines.every((n) => n === 1), JSON.stringify(lines)).toBe(true);
   });
 }
