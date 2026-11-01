@@ -1,0 +1,68 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      dryrun:
+        description: "List what would be uploaded; change nothing."
+        type: boolean
+        default: true
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: "Deploy"
+    runs-on: ubuntu-latest
+    env:
+      SITE_BUCKET: ${{ vars.SITE_BUCKET }}
+      SITE_DISTRIBUTION_ID: ${{ vars.SITE_DISTRIBUTION_ID }}
+      DRYRUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dryrun }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # The production build fails while any [[WRITE: …]] marker remains, so
+      # nothing ships until Nathan has written it. A dry run skips that gate:
+      # it uploads nothing.
+      - name: Build (production)
+        if: ${{ env.DRYRUN != 'true' }}
+        run: npm run build:production
+
+      - name: Build (dry run)
+        if: ${{ env.DRYRUN == 'true' }}
+        run: npm run build
+
+      # The site deploy role: this bucket and distribution only, from main only.
+      - name: Assume IAM Role
+        uses: bitterbridge/github-actions/assume-iam-role@v0.0.55
+        with:
+          role-to-assume: ${{ vars.SITE_DEPLOY_ROLE }}
+
+      - name: Dry run
+        if: ${{ env.DRYRUN == 'true' }}
+        run: ./scripts/deploy.sh --dryrun
+
+      - name: Deploy
+        if: ${{ env.DRYRUN != 'true' }}
+        run: ./scripts/deploy.sh
+
+      - name: Verify the live site
+        if: ${{ env.DRYRUN != 'true' }}
+        run: ./scripts/verify-deploy.sh
