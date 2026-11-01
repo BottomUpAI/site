@@ -30,6 +30,7 @@
     "@playwright/test": "1.64.1",
     "@types/hast": "3.0.5",
     "@types/node": "26.6.6",
+    "happy-dom": "21.0.4",
     "html-validate": "11.17.0",
     "rehype-stringify": "10.0.1",
     "remark-parse": "11.0.0",

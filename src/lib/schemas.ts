@@ -19,8 +19,10 @@ export const linkSchema = z.object({
 export const timelineEntrySchema = z.object({
   // A year, or a year and month.
   date: z.string().regex(/^\d{4}(-(0[1-9]|1[0-2]))?$/, "must be YYYY or YYYY-MM"),
-  text: z.string().min(1),
+  // The title is the link (when there is one); the detail is plain text under it.
+  title: z.string().min(1),
   href: httpsUrl.optional(),
+  detail: z.string().min(1).optional(),
 });
 
 export const homeSchema = z.object({

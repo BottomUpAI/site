@@ -15,15 +15,22 @@ const { entries } = Astro.props;
       {entries.map((entry) => (
         <li>
           <time datetime={entry.date}>{entry.date}</time>
-          <span>
-            {entry.href ? (
-              <a href={entry.href}>
-                <Text value={entry.text} />
-              </a>
-            ) : (
-              <Text value={entry.text} />
+          <div>
+            <p class="title">
+              {entry.href ? (
+                <a href={entry.href}>
+                  <Text value={entry.title} />
+                </a>
+              ) : (
+                <Text value={entry.title} />
+              )}
+            </p>
+            {entry.detail && (
+              <p class="detail">
+                <Text value={entry.detail} />
+              </p>
             )}
-          </span>
+          </div>
         </li>
       ))}
     </ol>
@@ -42,10 +49,18 @@ const { entries } = Astro.props;
     display: grid;
     grid-template-columns: 7.5ch 1fr;
     gap: var(--space-3);
-    padding: var(--space-2) 0;
+    padding: var(--space-3) 0;
     border-top: 1px solid var(--color-rule);
     font-size: var(--step--1);
-    overflow-wrap: anywhere;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  .detail {
+    margin-top: var(--space-1);
+    color: var(--color-muted);
   }
 
   /* The body lets text break anywhere; a date never should. */
