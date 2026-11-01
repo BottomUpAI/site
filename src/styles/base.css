@@ -17,6 +17,9 @@ body {
   font-size: var(--step-0);
   line-height: 1.6;
   text-rendering: optimizeLegibility;
+  /* Long words, URLs and email addresses wrap anywhere rather than force
+     sideways scrolling on a phone. */
+  overflow-wrap: anywhere;
 }
 
 h1,
@@ -54,12 +57,6 @@ a:visited {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
   border-radius: 2px;
-}
-
-/* Long words, URLs and email addresses wrap instead of forcing sideways scroll. */
-.prose,
-.link-row {
-  overflow-wrap: anywhere;
 }
 
 .prose {

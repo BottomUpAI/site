@@ -4,12 +4,6 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      update-visual-baselines:
-        description: "Re-render the visual baselines and upload them as an artifact."
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -61,23 +55,9 @@ jobs:
       - run: npm run build
 
       - name: Browser tests
-        if: ${{ !inputs.update-visual-baselines }}
         run: npx playwright test
         env:
           HOME: /root
-
-      - name: Re-render visual baselines
-        if: ${{ inputs.update-visual-baselines }}
-        run: npx playwright test tests/e2e/visual.spec.ts --update-snapshots
-        env:
-          HOME: /root
-
-      - name: Upload visual baselines
-        if: ${{ inputs.update-visual-baselines }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: visual-baselines
-          path: tests/e2e/__screenshots__/
 
       - name: Upload test results
         if: ${{ failure() }}
@@ -104,3 +84,13 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx lhci autorun
+
+  # Deploys only from main, and only once every check above has passed.
+  deploy:
+    name: "Deploy"
+    needs: [static, browser, lighthouse]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/deploy.yaml

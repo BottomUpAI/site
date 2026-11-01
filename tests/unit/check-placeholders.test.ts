@@ -26,6 +26,12 @@ test("fails on a marker that only appears in an href", () => {
   expect(r.out).toContain("about/index.html: 1 marker(s)");
 });
 
+test("fails on percent-encoded markers (Markdown link targets), any case", () => {
+  const r = gate(fixture("dist-encoded"));
+  expect(r.status).toBe(1);
+  expect(r.out).toContain("index.html: 2 marker(s)");
+});
+
 test("passes a clean tree", () => {
   const r = gate(fixture("dist-clean"));
   expect(r.status).toBe(0);
