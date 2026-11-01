@@ -20,11 +20,13 @@ fi
 
 [[ -f dist/index.html && -f dist/404.html ]] || { echo "deploy: dist/ is not a complete build" >&2; exit 1; }
 
-aws s3 sync dist "s3://$SITE_BUCKET" "${dryrun[@]}" \
+# ${dryrun[@]+…} expands to nothing for an empty array; plain "${dryrun[@]}"
+# is an unbound-variable error under set -u in bash 3.2 (macOS).
+aws s3 sync dist "s3://$SITE_BUCKET" ${dryrun[@]+"${dryrun[@]}"} \
   --exclude "*" --include "_astro/*" \
   --cache-control "public, max-age=31536000, immutable"
 
-aws s3 sync dist "s3://$SITE_BUCKET" "${dryrun[@]}" \
+aws s3 sync dist "s3://$SITE_BUCKET" ${dryrun[@]+"${dryrun[@]}"} \
   --exclude "_astro/*" --delete \
   --cache-control "public, max-age=0, must-revalidate"
 

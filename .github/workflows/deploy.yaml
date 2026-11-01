@@ -14,21 +14,21 @@ on:
         default: true
 
 permissions:
-  id-token: write
   contents: read
 
 concurrency:
   group: deploy
   cancel-in-progress: false
 
+env:
+  DRYRUN: ${{ inputs.dryrun == true }}
+
 jobs:
-  deploy:
-    name: "Deploy"
+  # Installs dependencies and builds, with no way to get AWS credentials: no
+  # package code ever runs where the deploy role could be assumed.
+  build:
+    name: "Build"
     runs-on: ubuntu-latest
-    env:
-      SITE_BUCKET: ${{ vars.SITE_BUCKET }}
-      SITE_DISTRIBUTION_ID: ${{ vars.SITE_DISTRIBUTION_ID }}
-      DRYRUN: ${{ inputs.dryrun == true }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -52,9 +52,43 @@ jobs:
         if: ${{ env.DRYRUN == 'true' }}
         run: npm run build
 
-      # The site deploy role: this bucket and distribution only, from main only.
+      - name: Upload build
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  # Uploads the built files with the site deploy role: this bucket and
+  # distribution only, from main only. Runs only repo scripts and the AWS CLI.
+  deploy:
+    name: "Deploy"
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      SITE_BUCKET: ${{ vars.SITE_BUCKET }}
+      SITE_DISTRIBUTION_ID: ${{ vars.SITE_DISTRIBUTION_ID }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Node only, for verify-deploy.sh to read tests/serve.mjs; no npm install.
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Download build
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+
       - name: Assume IAM Role
-        uses: bitterbridge/github-actions/assume-iam-role@v0.0.55
+        uses: bitterbridge/github-actions/assume-iam-role@2bc099a9d4ee7502ad998b3e42f810141422707d # v0.0.55
         with:
           role-to-assume: ${{ vars.SITE_DEPLOY_ROLE }}
 

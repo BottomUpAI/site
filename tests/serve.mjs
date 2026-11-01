@@ -4,8 +4,9 @@
 //   - /x and /x/ are rewritten to /x/index.html (the viewer-request function);
 //   - a missing file gets /404.html with status 404 (custom error response);
 //   - every response carries the production security headers.
-// PRODUCTION_CSP must match the content_security_policy in BottomUpAI/terraform
-// (site.tf); scripts/verify-deploy.sh checks it against the live header.
+// SECURITY_HEADERS must match the response headers policy in BottomUpAI/terraform
+// (modules/static_site and site.tf); scripts/verify-deploy.sh checks every one
+// of them against the live site after each deploy.
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
@@ -15,6 +16,15 @@ export const PRODUCTION_CSP =
   "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; img-src 'self' data:; " +
   "style-src 'self' 'unsafe-inline'; font-src 'self'; worker-src 'self' blob:; object-src 'none'; " +
   "base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests";
+
+export const SECURITY_HEADERS = {
+  "content-security-policy": PRODUCTION_CSP,
+  "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+};
 
 const ROOT = fileURLToPath(new URL("../dist/", import.meta.url));
 
@@ -41,8 +51,7 @@ export function resolve(pathname) {
 function send(res, status, file) {
   res.writeHead(status, {
     "content-type": TYPES[extname(file)] ?? "application/octet-stream",
-    "content-security-policy": PRODUCTION_CSP,
-    "x-content-type-options": "nosniff",
+    ...SECURITY_HEADERS,
   });
   createReadStream(file).pipe(res);
 }
