@@ -1,0 +1,43 @@
+---
+import { hasMarker } from "../lib/markers";
+import type { Link } from "../lib/schemas";
+import Text from "./Text.astro";
+
+interface Props {
+  links: Link[];
+}
+
+const { links } = Astro.props;
+
+// The email link shows the address itself, so it can be read and copied.
+const text = (link: Link) => (link.href.startsWith("mailto:") ? link.href.slice("mailto:".length) : link.label);
+---
+
+<ul class="link-row">
+  {
+    links.map((link) => (
+      <li>
+        {hasMarker(link.href) ? (
+          <span>
+            {link.label} <Text value={link.href} />
+          </span>
+        ) : (
+          <a href={link.href}>{text(link)}</a>
+        )}
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .link-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-ui);
+    font-size: var(--step--1);
+  }
+</style>

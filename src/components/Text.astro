@@ -1,0 +1,23 @@
+---
+// Renders a frontmatter string, showing any [[WRITE: …]] markers the same way
+// the Markdown plugin does. Every frontmatter string that reaches a page goes
+// through this component.
+import { splitMarkers } from "../lib/markers";
+
+interface Props {
+  value: string;
+}
+
+const { value } = Astro.props;
+const segments = splitMarkers(value);
+---
+
+{
+  segments.map((segment) =>
+    segment.kind === "text" ? (
+      segment.value
+    ) : (
+      <mark class="write-marker" data-label={segment.label}>{`[[WRITE: ${segment.label}]]`}</mark>
+    ),
+  )
+}

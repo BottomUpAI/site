@@ -1,4 +1,37 @@
 ---
+import { getEntry, render } from "astro:content";
+import LinkRow from "../components/LinkRow.astro";
+import Text from "../components/Text.astro";
+import Base from "../layouts/Base.astro";
+
+const home = await getEntry("home", "home");
+if (!home) throw new Error("src/content/pages/home.md is missing");
+const { Content: Bio } = await render(home);
+const { name, focus, description, links } = home.data;
 ---
 
-<h1>Nathan Douglas</h1>
+<Base title={name} description={description} path="/">
+  <section class="identity" aria-labelledby="name">
+    <h1 id="name">{name}</h1>
+    <p class="focus"><Text value={focus} /></p>
+    <div class="prose bio"><Bio /></div>
+    <LinkRow links={links} />
+  </section>
+</Base>
+
+<style>
+  .identity {
+    padding-top: var(--space-4);
+  }
+
+  .focus {
+    font-size: var(--step-1);
+    line-height: 1.35;
+    max-width: var(--measure);
+    margin-bottom: var(--space-4);
+  }
+
+  .bio {
+    margin-bottom: var(--space-4);
+  }
+</style>

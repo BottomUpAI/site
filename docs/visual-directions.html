@@ -1,0 +1,147 @@
+<!doctype html>
+<!--
+  Three candidate visual directions for bottomuplabs.ai, for Nathan to choose
+  from. A standalone mockup: not part of the build. It loads fonts from Google
+  Fonts for convenience; the real site self-hosts them.
+  All text other than the name and link labels is a [[WRITE: …]] marker.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visual directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root { --page: #e9e9e9; --page-fg: #222; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 64px; background: var(--page); color: var(--page-fg);
+         font: 14px/1.5 system-ui, sans-serif; }
+  h1.sheet { font-size: 18px; margin: 0 0 4px; }
+  p.sheet { margin: 0 0 24px; color: #555; max-width: 70ch; }
+  section.direction { margin: 0 0 48px; }
+  section.direction > h2 { font-size: 15px; margin: 0 0 4px; }
+  section.direction > p { margin: 0 0 12px; color: #555; max-width: 80ch; }
+  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 16px; }
+
+  /* One "page" rendered in a direction + scheme. */
+  .page { background: var(--bg); color: var(--fg); border-radius: 6px; overflow: hidden;
+          box-shadow: 0 1px 3px rgb(0 0 0 / .15); font-family: var(--font-body); }
+  .page nav { display: flex; justify-content: space-between; align-items: baseline;
+              padding: 20px 32px; border-bottom: 1px solid var(--rule);
+              font-family: var(--font-ui); font-size: var(--step--1); }
+  .page nav .home { color: var(--fg); text-decoration: none; font-weight: 600; }
+  .page nav a { color: var(--fg); }
+  .page main { padding: 48px 32px 56px; max-width: calc(var(--measure) + 64px); }
+  .page h1 { font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--step-3);
+             line-height: 1.1; letter-spacing: var(--display-tracking); margin: 0 0 12px; }
+  .page .focus { font-size: var(--step-1); line-height: 1.35; margin: 0 0 20px; color: var(--fg); }
+  .page .bio { font-size: var(--step-0); line-height: 1.6; margin: 0 0 24px; }
+  .page .links { display: flex; flex-wrap: wrap; gap: 4px 20px; padding: 0; margin: 0 0 40px; list-style: none;
+                 font-family: var(--font-ui); font-size: var(--step--1); }
+  .page a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  .page hr { border: 0; border-top: 1px solid var(--rule); margin: 0 0 32px; }
+  .page h2 { font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--step-2);
+             margin: 0 0 12px; letter-spacing: var(--display-tracking); }
+  .page .prose { font-size: var(--step-0); line-height: 1.65; margin: 0 0 16px; }
+  .page ol.timeline { list-style: none; padding: 0; margin: 24px 0 0; }
+  .page ol.timeline li { display: grid; grid-template-columns: 7.5ch 1fr; gap: 16px; padding: 10px 0;
+                         border-top: 1px solid var(--rule); font-size: var(--step--1); }
+  .page time { font-family: var(--font-mono); color: var(--muted); }
+  .page .meta { font-family: var(--font-ui); font-size: var(--step--1); color: var(--muted); }
+  .page .scheme { font-family: var(--font-ui); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+                  color: var(--muted); padding: 8px 32px; border-bottom: 1px solid var(--rule); }
+  mark.write-marker { background: var(--marker-bg); color: var(--marker-fg); outline: 1.5px dashed var(--marker-fg);
+                      outline-offset: 1px; padding: 0 .2em; border-radius: 2px; font-family: var(--font-mono);
+                      font-size: .85em; overflow-wrap: anywhere; }
+
+  /* Shared scale */
+  .page { --step--1: 0.875rem; --step-0: 1.0625rem; --step-1: 1.25rem; --step-2: 1.5rem; --step-3: 2.25rem;
+          --measure: 62ch; --display-tracking: -0.01em; }
+
+  /* Direction A: Journal */
+  .journal { --font-body: "Source Serif 4", Georgia, serif; --font-display: "Source Serif 4", Georgia, serif;
+             --font-ui: "Inter", system-ui, sans-serif; --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+             --display-weight: 600; }
+  .journal.light { --bg: #fbf9f5; --fg: #1d1b18; --muted: #5f5a52; --rule: #e2ddd3; --link: #1f4e8c;
+                   --marker-bg: #fff1a6; --marker-fg: #3a2c00; }
+  .journal.dark  { --bg: #171614; --fg: #ece8e1; --muted: #a9a296; --rule: #34312c; --link: #93b6ee;
+                   --marker-bg: #4a3b00; --marker-fg: #ffe680; }
+
+  /* Direction B: Lab notebook */
+  .lab { --font-body: "IBM Plex Sans", system-ui, sans-serif; --font-display: "IBM Plex Sans", system-ui, sans-serif;
+         --font-ui: "IBM Plex Sans", system-ui, sans-serif; --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+         --display-weight: 500; --display-tracking: -0.015em; }
+  .lab.light { --bg: #f7f8f9; --fg: #16191d; --muted: #555d66; --rule: #dde1e5; --link: #00626a;
+               --marker-bg: #fff1a6; --marker-fg: #3a2c00; }
+  .lab.dark  { --bg: #111417; --fg: #e6e9ec; --muted: #9aa3ad; --rule: #2a3036; --link: #5cc8cf;
+               --marker-bg: #4a3b00; --marker-fg: #ffe680; }
+  .lab .meta, .lab nav { font-family: var(--font-mono); }
+
+  /* Direction C: Monograph */
+  .mono { --font-body: "Newsreader", Georgia, serif; --font-display: "Newsreader", Georgia, serif;
+          --font-ui: "Newsreader", Georgia, serif; --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+          --display-weight: 500; --step-3: 2.75rem; --display-tracking: -0.02em; }
+  .mono.light { --bg: #ffffff; --fg: #111111; --muted: #595959; --rule: #e5e5e5; --link: #111111;
+                --marker-bg: #fff1a6; --marker-fg: #3a2c00; }
+  .mono.dark  { --bg: #0d0d0d; --fg: #f2f2f2; --muted: #a3a3a3; --rule: #2b2b2b; --link: #f2f2f2;
+                --marker-bg: #4a3b00; --marker-fg: #ffe680; }
+  .mono nav { font-size: var(--step-0); }
+  .mono .links { font-size: var(--step-0); }
+</style>
+</head>
+<body>
+<h1 class="sheet">Visual directions</h1>
+<p class="sheet">Same content in each: your name, link labels, and <code>[[WRITE: …]]</code> markers where your prose goes. Each direction is shown in light and dark (the site follows the system setting). The marker style is shared and never ships; it's here so you can see it reads as unmistakably unfinished in every direction. The live pieces will carry the color; the frame stays quiet.</p>
+
+<template id="page">
+  <div class="scheme"></div>
+  <nav><a class="home" href="#">Nathan Douglas</a><a href="#">About</a></nav>
+  <main>
+    <h1>Nathan Douglas</h1>
+    <p class="focus"><mark class="write-marker">[[WRITE: one-line research focus]]</mark></p>
+    <p class="bio"><mark class="write-marker">[[WRITE: 1–3 sentence bio]]</mark></p>
+    <ul class="links">
+      <li><a href="#">GitHub</a></li>
+      <li><a href="#">LinkedIn</a></li>
+      <li><a href="#">hello@bottomuplabs.ai</a></li>
+    </ul>
+    <hr>
+    <h2>About</h2>
+    <p class="prose"><mark class="write-marker">[[WRITE: About page prose]]</mark></p>
+    <ol class="timeline">
+      <li><time>YYYY-MM</time><span><mark class="write-marker">[[WRITE: timeline entry]]</mark></span></li>
+      <li><time>YYYY-MM</time><span><mark class="write-marker">[[WRITE: timeline entry]]</mark></span></li>
+    </ol>
+    <p class="meta" style="margin-top:24px"><a href="#">Résumé (PDF)</a></p>
+  </main>
+</template>
+
+<section class="direction">
+  <h2>A. Journal</h2>
+  <p>Source Serif 4 for reading, Inter for navigation and metadata. Warm off-white and near-black, a deep blue for links. Reads like a well-set academic journal or a long-form research blog.</p>
+  <div class="pair"><div class="page journal light" data-scheme="Light"></div><div class="page journal dark" data-scheme="Dark"></div></div>
+</section>
+
+<section class="direction">
+  <h2>B. Lab notebook</h2>
+  <p>IBM Plex Sans throughout, Plex Mono for navigation, dates and metadata. Cool grays and a teal link color. Technical and exact; closest to an engineering-research feel.</p>
+  <div class="pair"><div class="page lab light" data-scheme="Light"></div><div class="page lab dark" data-scheme="Dark"></div></div>
+</section>
+
+<section class="direction">
+  <h2>C. Monograph</h2>
+  <p>A single serif family (Newsreader) for everything, larger name, pure black and white, links distinguished only by underline. The most austere; everything visual is left to the pieces.</p>
+  <div class="pair"><div class="page mono light" data-scheme="Light"></div><div class="page mono dark" data-scheme="Dark"></div></div>
+</section>
+
+<script>
+  const tpl = document.getElementById("page");
+  for (const el of document.querySelectorAll(".page")) {
+    el.append(tpl.content.cloneNode(true));
+    el.querySelector(".scheme").textContent = el.dataset.scheme;
+  }
+</script>
+</body>
+</html>

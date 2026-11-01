@@ -1,0 +1,55 @@
+---
+import type { TimelineEntry } from "../lib/schemas";
+import Text from "./Text.astro";
+
+interface Props {
+  entries: TimelineEntry[];
+}
+
+const { entries } = Astro.props;
+---
+
+{
+  entries.length > 0 && (
+    <ol class="timeline">
+      {entries.map((entry) => (
+        <li>
+          <time datetime={entry.date}>{entry.date}</time>
+          <span>
+            {entry.href ? (
+              <a href={entry.href}>
+                <Text value={entry.text} />
+              </a>
+            ) : (
+              <Text value={entry.text} />
+            )}
+          </span>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+<style>
+  .timeline {
+    list-style: none;
+    margin: var(--space-5) 0 0;
+    padding: 0;
+    max-width: var(--measure);
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: 7.5ch 1fr;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-top: 1px solid var(--color-rule);
+    font-size: var(--step--1);
+    overflow-wrap: anywhere;
+  }
+
+  time {
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+  }
+</style>

@@ -1,4 +1,16 @@
 ---
+import Base from "../layouts/Base.astro";
 ---
 
-<h1>404</h1>
+<Base title="Page not found · Nathan Douglas" description="Page not found." path="/404.html">
+  <h1>404</h1>
+  <p>Page not found.</p>
+  <p class="home"><a href="/">Home</a></p>
+</Base>
+
+<style>
+  .home {
+    font-family: var(--font-ui);
+    font-size: var(--step--1);
+  }
+</style>
