@@ -1,0 +1,26 @@
+@media print {
+  :root {
+    --color-bg: #fff;
+    --color-fg: #000;
+    --color-muted: #333;
+    --color-rule: #999;
+    --color-link: #000;
+    --color-link-visited: #000;
+  }
+
+  body {
+    font-size: 11pt;
+  }
+
+  .site-nav {
+    display: none;
+  }
+
+  /* Printed pages can't be clicked, so show where external links go. */
+  .prose a[href^="http"]::after,
+  .link-row a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+  }
+}
