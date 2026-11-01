@@ -48,8 +48,11 @@ const { entries } = Astro.props;
     overflow-wrap: anywhere;
   }
 
+  /* The body lets text break anywhere; a date never should. */
   time {
     font-family: var(--font-mono);
     color: var(--color-muted);
+    white-space: nowrap;
+    overflow-wrap: normal;
   }
 </style>
