@@ -1,8 +1,11 @@
 name: Deploy
+# Called by CI after all checks pass on main; run by hand only as a dry run.
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      dryrun:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       dryrun:
@@ -25,7 +28,7 @@ jobs:
     env:
       SITE_BUCKET: ${{ vars.SITE_BUCKET }}
       SITE_DISTRIBUTION_ID: ${{ vars.SITE_DISTRIBUTION_ID }}
-      DRYRUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dryrun }}
+      DRYRUN: ${{ inputs.dryrun == true }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

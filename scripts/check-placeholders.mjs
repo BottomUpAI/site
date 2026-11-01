@@ -3,7 +3,9 @@
 //
 // Scans the built files as raw text, so markers in attributes and <head>
 // (titles, meta descriptions, hrefs) count too, and so does an unterminated
-// marker. The prefix must match MARKER_PREFIX in src/lib/markers.ts.
+// marker. The prefix must match MARKER_PREFIX in src/lib/markers.ts. Markdown
+// percent-encodes link targets, so a marker used as a link URL arrives as
+// %5B%5BWRITE: and is counted too.
 //
 //   node scripts/check-placeholders.mjs <dir> [--report]
 //
@@ -13,6 +15,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const PREFIX = "[[WRITE:";
+const ENCODED = /%5B%5BWRITE(:|%3A)/gi;
 const SCANNED = /\.(html|xml|txt)$/;
 
 const [dir, flag] = process.argv.slice(2);
@@ -33,7 +36,8 @@ function* files(root) {
 
 let total = 0;
 for (const path of [...files(dir)].sort()) {
-  const count = readFileSync(path, "utf8").split(PREFIX).length - 1;
+  const text = readFileSync(path, "utf8");
+  const count = text.split(PREFIX).length - 1 + (text.match(ENCODED)?.length ?? 0);
   if (count > 0) {
     console.log(`${relative(dir, path)}: ${count} marker(s)`);
     total += count;
