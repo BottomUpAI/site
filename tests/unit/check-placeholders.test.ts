@@ -32,6 +32,19 @@ test("fails on percent-encoded markers (Markdown link targets), any case", () =>
   expect(r.out).toContain("index.html: 2 marker(s)");
 });
 
+test("fails on lowercase, spaced and encoded-spaced variants", () => {
+  const r = gate(fixture("dist-variants"));
+  expect(r.status).toBe(1);
+  expect(r.out).toContain("index.html: 3 marker(s)");
+});
+
+test("scans SVG and web manifest files too", () => {
+  const r = gate(fixture("dist-svg"));
+  expect(r.status).toBe(1);
+  expect(r.out).toContain("og.svg: 1 marker(s)");
+  expect(r.out).toContain("site.webmanifest: 1 marker(s)");
+});
+
 test("passes a clean tree", () => {
   const r = gate(fixture("dist-clean"));
   expect(r.status).toBe(0);

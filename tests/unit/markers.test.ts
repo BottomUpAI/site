@@ -31,7 +31,20 @@ describe("splitMarkers", () => {
   });
 });
 
+test("lowercase and spaced variants still count as markers", () => {
+  expect(splitMarkers("[[write: a]] [[ WRITE : b ]]")).toEqual([
+    { kind: "marker", label: "a" },
+    { kind: "text", value: " " },
+    { kind: "marker", label: "b" },
+  ]);
+});
+
 describe("hasMarker", () => {
+  test("true for lowercase and spaced variants", () => {
+    expect(hasMarker("[[write: x]]")).toBe(true);
+    expect(hasMarker("[[ WRITE : x")).toBe(true);
+  });
+
   test("true even when unterminated", () => {
     expect(hasMarker("[[WRITE: unterminated")).toBe(true);
   });

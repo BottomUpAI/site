@@ -17,8 +17,7 @@
   }
 
   /* Printed pages can't be clicked, so show where external links go. */
-  .prose a[href^="http"]::after,
-  .link-row a[href^="http"]::after {
+  main a[href^="http"]::after {
     content: " (" attr(href) ")";
     font-size: 0.85em;
     overflow-wrap: anywhere;

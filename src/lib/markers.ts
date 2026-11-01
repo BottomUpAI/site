@@ -6,7 +6,10 @@ export const MARKER_PREFIX = "[[WRITE:";
 
 export type Segment = { kind: "text"; value: string } | { kind: "marker"; label: string };
 
-const MARKER = /\[\[WRITE:([^\]]*)\]\]/g;
+// The canonical form is [[WRITE: label]], but a mistyped variant such as
+// [[write: …]] or [[ WRITE : …]] must still show (and still fail the gate).
+const MARKER = /\[\[\s*write\s*:([^\]]*)\]\]/gi;
+const MARKER_START = /\[\[\s*write\s*:/i;
 
 /** Splits text into plain runs and complete markers, in order. */
 export function splitMarkers(text: string): Segment[] {
@@ -27,5 +30,5 @@ export function splitMarkers(text: string): Segment[] {
 
 /** True if the text contains a marker, even an unterminated one. */
 export function hasMarker(text: string): boolean {
-  return text.includes(MARKER_PREFIX);
+  return MARKER_START.test(text);
 }
