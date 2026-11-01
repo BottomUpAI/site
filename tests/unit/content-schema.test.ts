@@ -61,7 +61,7 @@ describe("links", () => {
 });
 
 describe("timeline", () => {
-  const withDate = (date: string) => ({ ...validAbout, timeline: [{ date, text: "[[WRITE: entry]]" }] });
+  const withDate = (date: string) => ({ ...validAbout, timeline: [{ date, title: "[[WRITE: entry]]" }] });
 
   test("rejects month 13", () => {
     expect(aboutSchema.safeParse(withDate("2026-13")).success).toBe(false);
@@ -72,13 +72,23 @@ describe("timeline", () => {
     expect(aboutSchema.safeParse(withDate("2026-11")).success).toBe(true);
   });
 
+  test("an entry has a title and may add a detail", () => {
+    const entry = { date: "2026-10", title: "A title", href: "https://x.example", detail: "More about it." };
+    expect(aboutSchema.safeParse({ ...validAbout, timeline: [entry] }).success).toBe(true);
+    expect(aboutSchema.safeParse({ ...validAbout, timeline: [{ date: "2026-10", title: "A title" }] }).success).toBe(true);
+  });
+
+  test("an entry without a title is rejected", () => {
+    expect(aboutSchema.safeParse({ ...validAbout, timeline: [{ date: "2026-10", text: "old shape" }] }).success).toBe(false);
+  });
+
   test("accepts an empty timeline", () => {
     expect(aboutSchema.safeParse(validAbout).success).toBe(true);
   });
 
   test("rejects a non-https entry link", () => {
     expect(
-      aboutSchema.safeParse({ ...validAbout, timeline: [{ date: "2026", text: "x", href: "http://x.example" }] })
+      aboutSchema.safeParse({ ...validAbout, timeline: [{ date: "2026", title: "x", href: "http://x.example" }] })
         .success,
     ).toBe(false);
   });
