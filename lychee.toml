@@ -3,3 +3,6 @@
 include_fragments = "full"
 max_retries = 3
 accept = ["200..=299", "429"]
+
+# LinkedIn answers automated requests with status 999.
+exclude = ["^https://(www\\.)?linkedin\\.com/"]

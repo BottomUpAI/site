@@ -49,6 +49,10 @@ describe("links", () => {
     expect(homeSchema.safeParse(withHref("[[WRITE: LinkedIn URL]]")).success).toBe(true);
   });
 
+  test("accepts Bluesky", () => {
+    expect(homeSchema.safeParse({ ...validHome, links: [{ label: "Bluesky", href: "https://bsky.app/profile/x" }] }).success).toBe(true);
+  });
+
   test("rejects labels outside the fixed set", () => {
     expect(homeSchema.safeParse({ ...validHome, links: [{ label: "Blog", href: "https://x.example" }] }).success).toBe(
       false,

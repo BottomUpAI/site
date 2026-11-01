@@ -12,7 +12,7 @@ const href = z
 const httpsUrl = z.string().regex(/^https:\/\/\S+$/, "must be an https:// URL");
 
 export const linkSchema = z.object({
-  label: z.enum(["GitHub", "LinkedIn", "Email", "Substack", "Google Scholar"]),
+  label: z.enum(["GitHub", "LinkedIn", "Email", "Bluesky", "Substack", "Google Scholar"]),
   href,
 });
 
