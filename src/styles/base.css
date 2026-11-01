@@ -65,3 +65,16 @@ a:visited {
 .prose {
   max-width: var(--measure);
 }
+
+/* Unwritten prose. Loud on purpose; never ships (scripts/check-placeholders.mjs). */
+.write-marker {
+  background: var(--color-marker-bg);
+  color: var(--color-marker-fg);
+  outline: 1.5px dashed var(--color-marker-fg);
+  outline-offset: 1px;
+  border-radius: 2px;
+  padding: 0 0.2em;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}

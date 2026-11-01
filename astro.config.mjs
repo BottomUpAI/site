@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from "astro/config";
+import { rehypeWriteMarkers } from "./src/lib/rehype-write-markers.ts";
 
 export default defineConfig({
   site: "https://bottomuplabs.ai",
@@ -13,4 +14,7 @@ export default defineConfig({
     inlineStylesheets: "never",
   },
   compressHTML: true,
+  markdown: {
+    rehypePlugins: [rehypeWriteMarkers],
+  },
 });
