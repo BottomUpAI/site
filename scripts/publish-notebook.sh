@@ -34,7 +34,10 @@ git -C "$src" fetch --quiet origin main
 [[ -z $(git -C "$src" diff --name-only origin/main HEAD -- .) ]] || fail "$src differs from origin/main; push it first"
 
 # 2. Branch.
-[[ -z $(git status --porcelain) ]] || fail "the site has uncommitted changes; commit or stash them first"
+# This notebook's own directory is exempt: a first run leaves notebook.yaml
+# there, uncommitted, for Nathan to write the description in.
+[[ -z $(git status --porcelain -- . ":(exclude)$dest") ]] ||
+  fail "the site has uncommitted changes outside $dest; commit or stash them first"
 branch=$(git rev-parse --abbrev-ref HEAD)
 created=""
 if [[ $branch == main ]]; then

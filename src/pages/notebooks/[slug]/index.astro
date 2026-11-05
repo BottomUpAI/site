@@ -28,7 +28,7 @@ const FONTS = [serif, inter, mono];
 
 <Base title={`${data.title} · Nathan Douglas`} description={data.description} path={path} preloadFonts={FONTS}>
   <article class="notebook">
-    <h1>{data.title}</h1>
+    <h1 set:html={data.titleHtml} />
     {
       data.cells.map((cell) =>
         cell.kind === "markdown" ? (

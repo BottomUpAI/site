@@ -61,6 +61,7 @@ const notebookOutputSchema = z.discriminatedUnion("kind", [
 // What the loader stores: the metadata, plus the notebook as rendered by src/lib/notebook.ts.
 export const notebookSchema = notebookMetaSchema.omit({ licence: true }).extend({
   title: z.string().min(1),
+  titleHtml: z.string().min(1),
   licenceText: z.string().optional(),
   cells: z.array(
     z.discriminatedUnion("kind", [
