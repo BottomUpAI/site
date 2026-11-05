@@ -6,7 +6,7 @@ import Base from "../../layouts/Base.astro";
 const notebooks = (await getCollection("notebooks")).sort((a, b) => a.data.title.localeCompare(b.data.title));
 ---
 
-<Base title="Notebooks · Nathan Douglas" description="[[WRITE: meta description for the notebooks index]]" path="/notebooks/">
+<Base title="Notebooks · Nathan Douglas" description="Jupyter notebooks and similar artifacts" path="/notebooks/">
   <h1>Notebooks</h1>
   <ul class="notebooks">
     {
