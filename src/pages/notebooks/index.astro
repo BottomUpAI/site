@@ -1,0 +1,45 @@
+---
+import { getCollection } from "astro:content";
+import Text from "../../components/Text.astro";
+import Base from "../../layouts/Base.astro";
+
+const notebooks = (await getCollection("notebooks")).sort((a, b) => a.data.title.localeCompare(b.data.title));
+---
+
+<Base title="Notebooks · Nathan Douglas" description="[[WRITE: meta description for the notebooks index]]" path="/notebooks/">
+  <h1>Notebooks</h1>
+  <ul class="notebooks">
+    {
+      notebooks.map(({ id, data }) => (
+        <li>
+          <a href={`/notebooks/${id}/`}>{data.title}</a>
+          <p>
+            <Text value={data.description} />
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+</Base>
+
+<style>
+  .notebooks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: var(--measure);
+  }
+
+  li + li {
+    margin-top: var(--space-4);
+  }
+
+  li > a {
+    font-size: var(--step-1);
+    font-weight: 600;
+  }
+
+  li > p {
+    margin: var(--space-1) 0 0;
+  }
+</style>

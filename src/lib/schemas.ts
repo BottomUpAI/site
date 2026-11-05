@@ -40,3 +40,35 @@ export const aboutSchema = z.object({
 
 export type Link = z.infer<typeof linkSchema>;
 export type TimelineEntry = z.infer<typeof timelineEntrySchema>;
+
+// Notebooks: src/content/notebooks/<slug>/ holds the .ipynb (copied from
+// BottomUpAI/notebooks by scripts/sync-notebook.sh) and this notebook.yaml.
+export const notebookMetaSchema = z.object({
+  // Meta description and the index-page blurb: Nathan's words (or a marker).
+  description: z.string().min(1),
+  // The notebook in BottomUpAI/notebooks.
+  source: httpsUrl,
+  // A licence file in the same directory, shown on the page, for notebooks
+  // built on someone else's work.
+  licence: z.string().regex(/^[\w.-]+$/, "must be a file name in the notebook's directory").optional(),
+});
+
+const notebookOutputSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("text"), text: z.string(), stream: z.enum(["stdout", "stderr", "result", "error"]) }),
+  z.object({ kind: z.literal("image"), file: z.string(), width: z.number().int(), height: z.number().int() }),
+]);
+
+// What the loader stores: the metadata, plus the notebook as rendered by src/lib/notebook.ts.
+export const notebookSchema = notebookMetaSchema.omit({ licence: true }).extend({
+  title: z.string().min(1),
+  licenceText: z.string().optional(),
+  cells: z.array(
+    z.discriminatedUnion("kind", [
+      z.object({ kind: z.literal("markdown"), html: z.string() }),
+      z.object({ kind: z.literal("code"), number: z.number().int(), html: z.string(), outputs: z.array(notebookOutputSchema) }),
+    ]),
+  ),
+  images: z.array(z.object({ file: z.string(), base64: z.string() })),
+});
+
+export type NotebookMeta = z.infer<typeof notebookMetaSchema>;
