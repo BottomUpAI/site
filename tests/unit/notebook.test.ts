@@ -51,6 +51,12 @@ describe("renderNotebook", () => {
     expect(JSON.stringify(result.cells)).not.toContain("My title");
   });
 
+  test("a title keeps its inline Markdown in titleHtml and is plain text in title", async () => {
+    const result = await render(markdown("# What is `torch.nn` *really*? A & B"));
+    expect(result.titleHtml).toBe("What is <code>torch.nn</code> <em>really</em>? A &#x26; B");
+    expect(result.title).toBe("What is torch.nn really? A & B");
+  });
+
   test("a title-only first cell leaves no empty cell", async () => {
     const result = await render(markdown("# Title"), code("x = 1"));
     expect(result.cells.map((c) => c.kind)).toEqual(["code"]);
@@ -136,6 +142,7 @@ describe("vendored notebooks", () => {
     const json = readFileSync(new URL("einops-basics.ipynb", dir), "utf8");
     const result = await renderNotebook(json, "einops-basics.ipynb");
     expect(result.title).toBe("Einops tutorial, part 1: basics");
+    expect(result.titleHtml).toBe("Einops tutorial, part 1: basics");
     const images = result.cells.flatMap((c) => (c.kind === "code" ? c.outputs : [])).filter((o) => o.kind === "image");
     expect(images).toHaveLength(45);
     expect(result.images).toHaveLength(41);

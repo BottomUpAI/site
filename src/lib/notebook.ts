@@ -52,7 +52,9 @@ export type Cell =
 
 export type Image = { file: string; base64: string };
 
-export type RenderedNotebook = { title: string; cells: Cell[]; images: Image[] };
+/** `title` is plain text (for <title> and sorting); `titleHtml` keeps the
+ *  heading's inline Markdown (code, emphasis) for the page's <h1>. */
+export type RenderedNotebook = { title: string; titleHtml: string; cells: Cell[]; images: Image[] };
 
 // ---------- helpers ----------
 
@@ -101,6 +103,21 @@ function rehypeDemoteH1() {
 
 const TITLE = /^#[ \t]+(.+?)[ \t#]*$/m;
 
+const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+
+/** Text content of an HTML fragment: tags dropped, character references decoded. */
+export function htmlToText(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (ref, name: string) => {
+      if (name[0] === "#") {
+        const code = name[1] === "x" || name[1] === "X" ? parseInt(name.slice(2), 16) : parseInt(name.slice(1), 10);
+        return String.fromCodePoint(code);
+      }
+      return ENTITIES[name.toLowerCase()] ?? ref;
+    });
+}
+
 // ---------- conversion ----------
 
 /**
@@ -128,6 +145,11 @@ export async function renderNotebook(json: string, where: string): Promise<Rende
     rehypePlugins: [rehypeWriteMarkers, rehypeDemoteH1],
   });
   const html = async (source: string) => (await markdown.render(source)).code;
+
+  // Rendered as a paragraph (so it isn't demoted or given an id), then unwrapped.
+  const titleHtml = (await html(title![1]!))
+    .trim()
+    .replace(/^<p>([\s\S]*)<\/p>$/, "$1");
 
   const cells: Cell[] = [];
   const images = new Map<string, Image>();
@@ -175,5 +197,5 @@ export async function renderNotebook(json: string, where: string): Promise<Rende
   const duplicate = ids.find((id, i) => ids.indexOf(id) !== i);
   if (duplicate !== undefined) fail(`two headings would share the id "${duplicate}"`);
 
-  return { title: title![1]!, cells, images: [...images.values()] };
+  return { title: htmlToText(titleHtml), titleHtml, cells, images: [...images.values()] };
 }

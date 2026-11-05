@@ -1,0 +1,3 @@
+description: "An exploration of several modules and classes in PyTorch, like torch.nn, torch.optim, DataSet, and DataLoader"
+source: https://github.com/BottomUpAI/notebooks/blob/main/torch-nn-really/torch-nn-really.ipynb
+licence: PYTORCH-TUTORIALS-LICENSE

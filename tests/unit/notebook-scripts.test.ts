@@ -35,24 +35,33 @@ function notebooksRepo(slug: string, files: Record<string, string> = {}) {
   return { repo, dir: join(repo, slug), origin };
 }
 
-/** A scratch "site" holding the scripts, as a git repo on main. */
+/** A scratch "site" holding the scripts, as a git repo on main, pushed to a bare origin. */
 function site() {
   const dir = mkdtempSync(join(tmpdir(), "site-"));
+  const origin = mkdtempSync(join(tmpdir(), "site-origin-"));
+  spawnSync("git", ["init", "--quiet", "--bare", "--initial-branch=main", origin]);
   cpSync(scripts, join(dir, "scripts"), { recursive: true });
   git(dir, "init", "--quiet", "--initial-branch=main");
   git(dir, "config", "user.email", "t@example.com");
   git(dir, "config", "user.name", "T");
   git(dir, "add", "-A");
   git(dir, "commit", "--quiet", "-m", "init");
+  git(dir, "remote", "add", "origin", origin);
+  git(dir, "push", "--quiet", "-u", "origin", "main");
   return dir;
 }
 
 /** Runs a script under /bin/bash (3.2 on macOS), with stub `gh` and `npm` that record their calls. */
 function run(cwd: string, script: string, ...args: string[]) {
+  return runWith({}, cwd, script, ...args);
+}
+
+/** As run(), with exit statuses for the stubs (e.g. { npm: 1 } for a failing build). */
+function runWith(exits: Record<string, number>, cwd: string, script: string, ...args: string[]) {
   const bin = mkdtempSync(join(tmpdir(), "stubs-"));
   const log = join(bin, "calls.log");
   for (const tool of ["gh", "npm"]) {
-    writeFileSync(join(bin, tool), `#!/bin/sh\necho "${tool} $*" >> "${log}"\n`);
+    writeFileSync(join(bin, tool), `#!/bin/sh\necho "${tool} $*" >> "${log}"\nexit ${exits[tool] ?? 0}\n`);
     chmodSync(join(bin, tool), 0o755);
   }
   const r = spawnSync("/bin/bash", [join(cwd, "scripts", script), ...args], {
@@ -136,15 +145,33 @@ describe("publish-notebook.sh", () => {
   test("a new notebook stops at the description marker, on its own branch, before building or pushing", () => {
     const { dir } = notebooksRepo("fresh");
     const cwd = site();
-    git(cwd, "remote", "add", "origin", mkdtempSync(join(tmpdir(), "site-origin-")));
-    spawnSync("git", ["init", "--quiet", "--bare", git(cwd, "remote", "get-url", "origin")]);
-    git(cwd, "push", "--quiet", "-u", "origin", "main");
     const r = run(cwd, "publish-notebook.sh", dir);
     expect(r.out).not.toContain("unbound variable");
     expect(r.status, r.out).toBe(0);
     expect(r.out).toContain("Write the description");
     expect(git(cwd, "rev-parse", "--abbrev-ref", "HEAD")).toBe("notebook/fresh");
     expect(r.calls).toEqual([]);
+  });
+
+  test("after the description is written, a second run gets past the clean-tree check to the build", () => {
+    const { dir } = notebooksRepo("second");
+    const cwd = site();
+    expect(run(cwd, "publish-notebook.sh", dir).out).toContain("Write the description");
+    const meta = join(cwd, "src/content/notebooks/second/notebook.yaml");
+    writeFileSync(meta, readFileSync(meta, "utf8").replace(/"\[\[WRITE:[^"]*"/, '"Nathan\'s words."'));
+    const r = runWith({ npm: 1 }, cwd, "publish-notebook.sh", dir);
+    expect(r.out).not.toContain("uncommitted changes");
+    expect(r.out).toContain("the build failed");
+    expect(r.calls).toEqual(["npm run build"]);
+  });
+
+  test("other uncommitted site changes still stop it", () => {
+    const { dir } = notebooksRepo("other");
+    const cwd = site();
+    writeFileSync(join(cwd, "scripts", "stray.txt"), "x");
+    const r = run(cwd, "publish-notebook.sh", dir);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain("the site has uncommitted changes outside src/content/notebooks/other");
   });
 });
 
