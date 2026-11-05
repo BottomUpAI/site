@@ -13,6 +13,7 @@
   --color-focus: #1f4e8c;
   --color-marker-bg: #fff1a6;
   --color-marker-fg: #3a2c00;
+  --color-code-bg: #f3f0e9;
 
   --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
   --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -46,5 +47,6 @@
     --color-focus: #93b6ee;
     --color-marker-bg: #4a3b00;
     --color-marker-fg: #ffe680;
+    --color-code-bg: #201e1b;
   }
 }

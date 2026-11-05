@@ -1,0 +1,139 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+import mono from "@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2?url";
+import inter from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import serif from "@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?url";
+import Base from "../../../layouts/Base.astro";
+
+export const getStaticPaths = (async () =>
+  (await getCollection("notebooks")).map((notebook) => ({
+    params: { slug: notebook.id },
+    props: { notebook },
+  }))) satisfies GetStaticPaths;
+
+interface Props {
+  notebook: CollectionEntry<"notebooks">;
+}
+
+const { id, data } = Astro.props.notebook;
+const path = `/notebooks/${id}/`;
+// Notebook images are tiny arrays rendered one pixel per element; show them at
+// twice their size, with hard pixel edges (see .output-image below).
+const SCALE = 2;
+// The first screen is mostly text and code, which reflows when the web fonts
+// replace the fallbacks; preloading them keeps layout shift (CLS) down.
+const FONTS = [serif, inter, mono];
+---
+
+<Base title={`${data.title} · Nathan Douglas`} description={data.description} path={path} preloadFonts={FONTS}>
+  <article class="notebook">
+    <h1>{data.title}</h1>
+    {
+      data.cells.map((cell) =>
+        cell.kind === "markdown" ? (
+          <div class="prose markdown-cell" set:html={cell.html} />
+        ) : (
+          <div class="code-cell">
+            <Fragment set:html={cell.html} />
+            {cell.outputs.length > 0 && (
+              <div class="outputs">
+                {cell.outputs.map((output) =>
+                  output.kind === "text" ? (
+                    <pre class="output" data-stream={output.stream} tabindex="0">{output.text}</pre>
+                  ) : (
+                    <img
+                      class="output-image"
+                      src={`${path}${output.file}`}
+                      alt={`Image output of cell ${cell.number}`}
+                      width={output.width * SCALE}
+                      height={output.height * SCALE}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ),
+                )}
+              </div>
+            )}
+          </div>
+        ),
+      )
+    }
+    <footer class="notebook-footer">
+      <p><a href={data.source}>Source notebook on GitHub</a></p>
+      {
+        data.licenceText !== undefined && (
+          <details>
+            <summary>Licence</summary>
+            <pre class="licence">{data.licenceText}</pre>
+          </details>
+        )
+      }
+    </footer>
+  </article>
+</Base>
+
+<style>
+  .markdown-cell {
+    margin-top: var(--space-4);
+  }
+
+  .markdown-cell :global(h2) {
+    margin-top: var(--space-5);
+  }
+
+  .code-cell {
+    margin: var(--space-3) 0;
+  }
+
+  .outputs {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    padding-left: var(--space-3);
+    border-left: 2px solid var(--color-rule);
+  }
+
+  .output {
+    margin: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    line-height: 1.5;
+    white-space: pre;
+    overflow-wrap: normal;
+  }
+
+  .output[data-stream="stderr"],
+  .output[data-stream="error"] {
+    color: var(--color-muted);
+  }
+
+  .output-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    image-rendering: pixelated;
+  }
+
+  .notebook-footer {
+    margin-top: var(--space-6);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-rule);
+    font-family: var(--font-ui);
+    font-size: var(--step--1);
+  }
+
+  .licence {
+    font-family: var(--font-mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  summary {
+    cursor: pointer;
+  }
+</style>

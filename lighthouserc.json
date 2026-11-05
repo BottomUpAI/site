@@ -3,7 +3,7 @@
     "collect": {
       "startServerCommand": "node tests/serve.mjs",
       "startServerReadyPattern": "serving dist/",
-      "url": ["http://localhost:4321/", "http://localhost:4321/about/", "http://localhost:4321/404.html"],
+      "url": ["http://localhost:4321/", "http://localhost:4321/about/", "http://localhost:4321/notebooks/", "http://localhost:4321/notebooks/einops-basics/", "http://localhost:4321/404.html"],
       "numberOfRuns": 3,
       "settings": { "preset": "desktop" }
     },

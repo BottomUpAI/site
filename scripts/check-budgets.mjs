@@ -19,6 +19,18 @@ export const BUDGETS = {
   total: 250 * KB,
 };
 
+// Notebook pages (/notebooks/<slug>/) carry every highlighted code cell and
+// every output image the notebook has, shipped as the original PNGs, so they
+// get a larger allowance for those. einops-basics, the first, is about 106 KB
+// of HTML and 303 KB of images.
+export const NOTEBOOK_BUDGETS = {
+  ...BUDGETS,
+  html: 160 * KB,
+  images: 400 * KB,
+  total: 750 * KB,
+};
+const NOTEBOOK_PAGE = /^notebooks\/[^/]+\/index\.html$/;
+
 const dir = process.argv[2];
 if (!dir || !existsSync(dir)) {
   console.error(`check-budgets: no such directory: ${dir}`);
@@ -61,14 +73,18 @@ let over = false;
 const rows = [];
 for (const path of [...htmlFiles(dir)].sort()) {
   const sizes = measure(path);
-  const failed = Object.keys(BUDGETS).filter((k) => sizes[k] > BUDGETS[k]);
+  const page = relative(dir, path).split("\\").join("/");
+  const budgets = NOTEBOOK_PAGE.test(page) ? NOTEBOOK_BUDGETS : BUDGETS;
+  const failed = Object.keys(budgets).filter((k) => sizes[k] > budgets[k]);
   over ||= failed.length > 0;
   rows.push({
-    page: relative(dir, path),
+    page,
     ...Object.fromEntries(Object.entries(sizes).map(([k, v]) => [k, `${(v / KB).toFixed(1)}`])),
     over: failed.join(",") || "-",
   });
 }
 console.table(rows);
-console.log(`budgets (KB): ${Object.entries(BUDGETS).map(([k, v]) => `${k} ${v / KB}`).join(", ")}`);
+const describe = (budgets) => Object.entries(budgets).map(([k, v]) => `${k} ${v / KB}`).join(", ");
+console.log(`budgets (KB): ${describe(BUDGETS)}`);
+console.log(`notebook pages (KB): ${describe(NOTEBOOK_BUDGETS)}`);
 process.exit(over ? 1 : 0);

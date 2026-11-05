@@ -1,6 +1,9 @@
 ---
 // "Research" and "Work" join once those pages have something on them (spec §4).
-const items = [{ label: "About", href: "/about/" }];
+const items = [
+  { label: "Notebooks", href: "/notebooks/" },
+  { label: "About", href: "/about/" },
+];
 const current = Astro.url.pathname;
 ---
 
@@ -11,7 +14,7 @@ const current = Astro.url.pathname;
       {
         items.map((item) => (
           <li>
-            <a href={item.href} aria-current={current === item.href ? "page" : undefined}>
+            <a href={item.href} aria-current={current === item.href ? "page" : current.startsWith(item.href) ? "true" : undefined}>
               {item.label}
             </a>
           </li>
@@ -54,7 +57,7 @@ const current = Astro.url.pathname;
   }
 
   a:hover,
-  a[aria-current="page"] {
+  a[aria-current] {
     text-decoration: underline;
     text-underline-offset: 3px;
   }

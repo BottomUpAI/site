@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import { rehypeWriteMarkers } from "./src/lib/rehype-write-markers.ts";
+import { SHIKI } from "./src/lib/shiki.ts";
 
 export default defineConfig({
   site: "https://bottomuplabs.ai",
@@ -16,5 +17,6 @@ export default defineConfig({
   compressHTML: true,
   markdown: {
     rehypePlugins: [rehypeWriteMarkers],
+    shikiConfig: SHIKI,
   },
 });
