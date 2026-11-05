@@ -16,10 +16,18 @@ npm run verify     # post-build checks on dist/
 `/notebooks/<slug>/` pages are built from Jupyter notebooks copied in from
 [BottomUpAI/notebooks](https://github.com/BottomUpAI/notebooks). Each lives in
 `src/content/notebooks/<slug>/` with a `notebook.yaml` (description, source URL,
-optional licence file). To update one after changing it in the notebooks repo:
+optional licence file). The notebook is shown as saved, outputs included, so run
+it, then commit and push it in the notebooks repo. Then, from here:
 
 ```sh
-scripts/sync-notebook.sh ../notebooks/einops-basics
+npm run notebook -- ../notebooks/<slug>
 ```
 
-The notebook is shown as saved, outputs included, so run it before syncing.
+That copies the notebook in, builds, and opens (or updates) a PR on
+`notebook/<slug>` with fresh visual baselines. The first time, it scaffolds
+`notebook.yaml` and stops so you can replace the `[[WRITE: …]]` description;
+run it again afterwards. Browser tests and Lighthouse pick up new notebook
+pages on their own.
+
+`npm run baselines` re-renders the visual baselines for the current (pushed) PR
+branch in CI's Playwright container and commits them.
