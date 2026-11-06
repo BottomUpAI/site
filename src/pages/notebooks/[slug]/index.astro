@@ -41,6 +41,8 @@ const FONTS = [serif, inter, mono];
                 {cell.outputs.map((output) =>
                   output.kind === "text" ? (
                     <pre class="output" data-stream={output.stream} tabindex="0">{output.text}</pre>
+                  ) : output.kind === "widget" ? (
+                    <p class="output-widget">Interactive widget: run the notebook to use it.</p>
                   ) : (
                     <img
                       class="output-image"
@@ -110,6 +112,13 @@ const FONTS = [serif, inter, mono];
   .output[data-stream="stderr"],
   .output[data-stream="error"] {
     color: var(--color-muted);
+  }
+
+  .output-widget {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: var(--step--1);
+    font-style: italic;
   }
 
   .output-image {

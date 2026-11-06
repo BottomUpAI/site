@@ -120,6 +120,20 @@ describe("renderNotebook", () => {
     expect(result.images).toHaveLength(1);
   });
 
+  test("an ipywidgets output becomes a widget placeholder, not its text/plain repr", async () => {
+    const widget = {
+      output_type: "display_data",
+      metadata: {},
+      data: {
+        "application/vnd.jupyter.widget-view+json": { model_id: "abc", version_major: 2, version_minor: 0 },
+        "text/plain": "interactive(children=(IntSlider(value=0, description='f', max=179), Output()))",
+      },
+    };
+    const result = await render(markdown("# T"), code("interact(look)", [widget]));
+    const cell = result.cells[0];
+    expect(cell?.kind === "code" && cell.outputs).toEqual([{ kind: "widget" }]);
+  });
+
   test("an output with no renderer is an error, not a silent gap", async () => {
     const html = { output_type: "display_data", metadata: {}, data: { "text/html": "<b>x</b>" } };
     await expect(render(markdown("# T"), code("x", [html]))).rejects.toThrow(/cell 2: no renderer for output types text\/html/);
