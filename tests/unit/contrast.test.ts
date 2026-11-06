@@ -39,7 +39,9 @@ test("every highlighted token in a vendored notebook clears 4.5:1 in both scheme
   const slugs = readdirSync(root, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
   expect(slugs.length).toBeGreaterThan(0);
   for (const slug of slugs) {
-    const json = readFileSync(new URL(`${slug}/${slug}.ipynb`, root), "utf8");
+    // Like the loader, take the one .ipynb in the directory, whatever its name.
+    const ipynb = readdirSync(new URL(`${slug}/`, root)).find((f) => f.endsWith(".ipynb"))!;
+    const json = readFileSync(new URL(`${slug}/${ipynb}`, root), "utf8");
     const { cells } = await renderNotebook(json, slug);
     const html = cells.map((c) => c.html).join("");
     for (const [, scheme, colour] of html.matchAll(/--shiki-(light|dark):(#[0-9a-f]{6})/gi)) {
