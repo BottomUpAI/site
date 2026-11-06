@@ -3,18 +3,20 @@
 # scaffolds its notebook.yaml the first time.
 #
 #   scripts/sync-notebook.sh ../notebooks/einops-basics
+#   scripts/sync-notebook.sh ../notebooks/nes/00-meet-mario.ipynb
 #
-# Copies <dir>/<dir name>.ipynb and any licence file (*LICENSE*, *LICENCE*) to
-# src/content/notebooks/<dir name>/. If notebook.yaml doesn't exist yet, writes
+# Copies the notebook (a directory's <dir name>.ipynb, or the file named) and any
+# licence file beside it (*LICENSE*, *LICENCE*) to src/content/notebooks/<slug>/;
+# scripts/notebook-path.sh says how the slug is chosen. If notebook.yaml doesn't exist yet, writes
 # one with the GitHub source URL worked out from the checkout's origin remote,
 # the licence file (if there is exactly one), and a [[WRITE: …]] marker for the
 # description, which is Nathan's to write. An existing notebook.yaml is left alone.
 set -euo pipefail
 
-src=${1:?usage: scripts/sync-notebook.sh <notebook directory>}
-src=${src%/}
-slug=$(basename "$src")
-ipynb="$src/$slug.ipynb"
+source "$(dirname "$0")/notebook-path.sh"
+notebook_path "${1:?usage: scripts/sync-notebook.sh <notebook directory or .ipynb>}"
+src=$nb_dir
+ipynb="$src/$nb_file"
 dest="src/content/notebooks/$slug"
 
 [[ -f $ipynb ]] || { echo "sync-notebook: no $ipynb" >&2; exit 1; }
@@ -42,7 +44,7 @@ fi
 remote=$(git -C "$src" config --get remote.origin.url)
 repo=$(sed -E 's#^(git@github\.com:|https://github\.com/)##; s#\.git$##' <<<"$remote")
 [[ $repo =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || { echo "sync-notebook: origin isn't a GitHub repo: $remote" >&2; exit 1; }
-path=$(git -C "$src" ls-files --full-name -- "$slug.ipynb")
+path=$(git -C "$src" ls-files --full-name -- "$nb_file")
 [[ -n $path ]] || { echo "sync-notebook: $ipynb isn't committed in its repo" >&2; exit 1; }
 
 {

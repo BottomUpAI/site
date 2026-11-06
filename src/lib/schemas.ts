@@ -56,6 +56,7 @@ export const notebookMetaSchema = z.object({
 const notebookOutputSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("text"), text: z.string(), stream: z.enum(["stdout", "stderr", "result", "error"]) }),
   z.object({ kind: z.literal("image"), file: z.string(), width: z.number().int(), height: z.number().int() }),
+  z.object({ kind: z.literal("widget") }),
 ]);
 
 // What the loader stores: the metadata, plus the notebook as rendered by src/lib/notebook.ts.

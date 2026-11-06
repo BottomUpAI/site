@@ -20,7 +20,8 @@ optional licence file). The notebook is shown as saved, outputs included, so run
 it, then commit and push it in the notebooks repo. Then, from here:
 
 ```sh
-npm run notebook -- ../notebooks/<slug>
+npm run notebook -- ../notebooks/<slug>                   # <slug>/<slug>.ipynb
+npm run notebook -- ../notebooks/nes/00-meet-mario.ipynb  # slug nes-00-meet-mario
 ```
 
 That copies the notebook in, builds, and opens (or updates) a PR on

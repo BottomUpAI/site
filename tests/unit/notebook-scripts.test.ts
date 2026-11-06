@@ -109,6 +109,26 @@ describe("sync-notebook.sh", () => {
     expect(readFileSync(join(cwd, "src/content/notebooks/kept/notebook.yaml"), "utf8")).toBe("description: Nathan's words\n");
   });
 
+  test("a notebook named by its file, in a directory of several, gets a slug from both", () => {
+    const { dir } = notebooksRepo("nes", { "00-meet-mario.ipynb": '{"mario": 0}', "01-next.ipynb": "{}" });
+    const cwd = site();
+    const r = run(cwd, "sync-notebook.sh", join(dir, "00-meet-mario.ipynb"));
+    expect(r.status, r.out).toBe(0);
+    const dest = join(cwd, "src/content/notebooks/nes-00-meet-mario");
+    expect(readFileSync(join(dest, "00-meet-mario.ipynb"), "utf8")).toBe('{"mario": 0}');
+    expect(existsSync(join(dest, "01-next.ipynb"))).toBe(false);
+    expect(readFileSync(join(dest, "notebook.yaml"), "utf8")).toContain(
+      "source: https://github.com/BottomUpAI/notebooks/blob/main/nes/00-meet-mario.ipynb",
+    );
+  });
+
+  test("a file whose name matches its directory gets the directory's slug", () => {
+    const { dir } = notebooksRepo("same");
+    const cwd = site();
+    expect(run(cwd, "sync-notebook.sh", join(dir, "same.ipynb")).status).toBe(0);
+    expect(existsSync(join(cwd, "src/content/notebooks/same/same.ipynb"))).toBe(true);
+  });
+
   test("rejects a directory name that isn't a URL slug", () => {
     const { dir } = notebooksRepo("Bad_Name");
     const r = run(site(), "sync-notebook.sh", dir);
@@ -131,6 +151,16 @@ describe("publish-notebook.sh", () => {
     writeFileSync(join(dir, "exported.md"), "nbconvert output");
     const r = run(site(), "publish-notebook.sh", dir);
     expect(r.out).not.toContain("uncommitted changes");
+  });
+
+  test("uncommitted work on another notebook in the same directory doesn't stop it", () => {
+    const { dir } = notebooksRepo("series", { "00-a.ipynb": "{}", "01-b.ipynb": "{}" });
+    writeFileSync(join(dir, "01-b.ipynb"), '{"in progress": true}');
+    const cwd = site();
+    const r = run(cwd, "publish-notebook.sh", join(dir, "00-a.ipynb"));
+    expect(r.status, r.out).toBe(0);
+    expect(r.out).toContain("Write the description");
+    expect(git(cwd, "rev-parse", "--abbrev-ref", "HEAD")).toBe("notebook/series-00-a");
   });
 
   test("refuses a notebook that isn't pushed", () => {

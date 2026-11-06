@@ -4,6 +4,9 @@
 # visual baselines.
 #
 #   npm run notebook -- ../notebooks/einops-basics
+#   npm run notebook -- ../notebooks/nes/00-meet-mario.ipynb
+#
+# (scripts/notebook-path.sh says how each names a notebook and its slug.)
 #
 # Steps:
 #   1. The notebook must be committed and pushed in its own repo, since the page
@@ -18,20 +21,26 @@
 #      scripts/update-baselines.sh.
 set -euo pipefail
 
-src=${1:?usage: npm run notebook -- <notebook directory>}
-src=${src%/}
-slug=$(basename "$src")
-ipynb="$slug.ipynb"
+source "$(dirname "$0")/notebook-path.sh"
+arg=${1:?usage: npm run notebook -- <notebook directory or .ipynb>}
+notebook_path "$arg"
+src=$nb_dir
+ipynb=$nb_file
 dest="src/content/notebooks/$slug"
 fail() { echo "publish-notebook: $*" >&2; exit 1; }
+# What gets published from $src: the notebook and its licence files. Other
+# notebooks in the same directory can be mid-edit.
+published=("$ipynb" "*LICENSE*" "*LICENCE*")
 
 [[ -f $src/$ipynb ]] || fail "no $src/$ipynb"
 
 # 1. The source link must resolve: committed, and on origin/main.
 git -C "$src" fetch --quiet origin main
 [[ -n $(git -C "$src" ls-files -- "$ipynb") ]] || fail "$src/$ipynb isn't committed in its repo"
-[[ -z $(git -C "$src" status --porcelain --untracked-files=no -- .) ]] || fail "$src has uncommitted changes; commit and push them first"
-[[ -z $(git -C "$src" diff --name-only origin/main HEAD -- .) ]] || fail "$src differs from origin/main; push it first"
+[[ -z $(git -C "$src" status --porcelain --untracked-files=no -- "${published[@]}") ]] ||
+  fail "$src/$ipynb has uncommitted changes; commit and push them first"
+[[ -z $(git -C "$src" diff --name-only origin/main HEAD -- "${published[@]}") ]] ||
+  fail "$src/$ipynb differs from origin/main; push it first"
 
 # 2. Branch.
 # This notebook's own directory is exempt: a first run leaves notebook.yaml
@@ -52,11 +61,11 @@ if [[ $branch == main ]]; then
 fi
 
 # 3. Sync, and stop while Nathan's words are still missing.
-scripts/sync-notebook.sh "$src"
+scripts/sync-notebook.sh "$arg"
 if grep -rqiE '\[\[[[:space:]]*write[[:space:]]*:' "$dest"; then
   echo
   echo "Write the description in $dest/notebook.yaml (replace the [[WRITE: …]] marker),"
-  echo "then run this again: npm run notebook -- $src"
+  echo "then run this again: npm run notebook -- $arg"
   exit 0
 fi
 

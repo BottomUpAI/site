@@ -14,7 +14,10 @@ import { SHIKI } from "./shiki";
 // nbformat stores multiline strings either whole or as a list of lines.
 const multiline = z.union([z.string(), z.array(z.string())]).transform((v) => (Array.isArray(v) ? v.join("") : v));
 
-const mimeBundle = z.record(z.string(), multiline);
+const WIDGET = "application/vnd.jupyter.widget-view+json";
+// Every MIME type holds text, except an ipywidgets view, which holds the
+// widget's model reference.
+const mimeBundle = z.object({ [WIDGET]: z.object({ model_id: z.string() }).optional() }).catchall(multiline);
 
 const outputSchema = z.discriminatedUnion("output_type", [
   z.object({ output_type: z.literal("stream"), name: z.enum(["stdout", "stderr"]), text: multiline }),
@@ -44,7 +47,8 @@ const notebookFileSchema = z.object({
 
 export type Output =
   | { kind: "text"; text: string; stream: "stdout" | "stderr" | "result" | "error" }
-  | { kind: "image"; file: string; width: number; height: number };
+  | { kind: "image"; file: string; width: number; height: number }
+  | { kind: "widget" };
 
 export type Cell =
   | { kind: "markdown"; html: string }
@@ -175,7 +179,11 @@ export async function renderNotebook(json: string, where: string): Promise<Rende
       } else {
         const png = output.data["image/png"];
         const plain = output.data["text/plain"];
-        if (png !== undefined) {
+        if (output.data[WIDGET] !== undefined) {
+          // A live widget needs a kernel and JavaScript; the static page notes
+          // that it was there rather than showing its text/plain repr.
+          outputs.push({ kind: "widget" });
+        } else if (png !== undefined) {
           const bytes = Buffer.from(png.replace(/\s/g, ""), "base64");
           const file = `${createHash("sha256").update(bytes).digest("hex").slice(0, 16)}.png`;
           images.set(file, { file, base64: bytes.toString("base64") });
