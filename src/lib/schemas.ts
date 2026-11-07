@@ -41,6 +41,15 @@ export const aboutSchema = z.object({
 export type Link = z.infer<typeof linkSchema>;
 export type TimelineEntry = z.infer<typeof timelineEntrySchema>;
 
+const slug = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "must be a slug (a-z, 0-9, -)");
+
+// The sections of the Notebooks index, in order (src/content/notebook-groups.yaml).
+export const notebookGroupsSchema = z
+  .array(z.object({ id: slug, title: z.string().min(1) }))
+  .refine((groups) => new Set(groups.map((g) => g.id)).size === groups.length, { message: "group ids must be unique" });
+
+export type NotebookGroup = z.infer<typeof notebookGroupsSchema>[number];
+
 // Notebooks: src/content/notebooks/<slug>/ holds the .ipynb (copied from
 // BottomUpAI/notebooks by scripts/sync-notebook.sh) and this notebook.yaml.
 export const notebookMetaSchema = z.object({
@@ -48,6 +57,9 @@ export const notebookMetaSchema = z.object({
   description: z.string().min(1),
   // The notebook in BottomUpAI/notebooks.
   source: httpsUrl,
+  // The top-level folder it's in there, which is its section on the Notebooks
+  // index; an id in src/content/notebook-groups.yaml.
+  group: slug,
   // A licence file in the same directory, shown on the page, for notebooks
   // built on someone else's work.
   licence: z.string().regex(/^[\w.-]+$/, "must be a file name in the notebook's directory").optional(),

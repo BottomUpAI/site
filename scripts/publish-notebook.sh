@@ -27,6 +27,7 @@ notebook_path "$arg"
 src=$nb_dir
 ipynb=$nb_file
 dest="src/content/notebooks/$slug"
+groups=src/content/notebook-groups.yaml
 fail() { echo "publish-notebook: $*" >&2; exit 1; }
 # What gets published from $src: the notebook and its licence files. Other
 # notebooks in the same directory can be mid-edit.
@@ -43,9 +44,10 @@ git -C "$src" fetch --quiet origin main
   fail "$src/$ipynb differs from origin/main; push it first"
 
 # 2. Branch.
-# This notebook's own directory is exempt: a first run leaves notebook.yaml
-# there, uncommitted, for Nathan to write the description in.
-[[ -z $(git status --porcelain -- . ":(exclude)$dest") ]] ||
+# This notebook's own directory and the groups file are exempt: a first run
+# leaves notebook.yaml (and maybe a new group) there, uncommitted, for Nathan
+# to write the description (and group title) in.
+[[ -z $(git status --porcelain -- . ":(exclude)$dest" ":(exclude)$groups") ]] ||
   fail "the site has uncommitted changes outside $dest; commit or stash them first"
 branch=$(git rev-parse --abbrev-ref HEAD)
 created=""
@@ -62,9 +64,10 @@ fi
 
 # 3. Sync, and stop while Nathan's words are still missing.
 scripts/sync-notebook.sh "$arg"
-if grep -rqiE '\[\[[[:space:]]*write[[:space:]]*:' "$dest"; then
+if grep -rqiE '\[\[[[:space:]]*write[[:space:]]*:' "$dest" "$groups"; then
   echo
-  echo "Write the description in $dest/notebook.yaml (replace the [[WRITE: …]] marker),"
+  echo "Replace the [[WRITE: …]] markers in these with your words:"
+  grep -rliE '\[\[[[:space:]]*write[[:space:]]*:' "$dest" "$groups" | sed 's/^/  /'
   echo "then run this again: npm run notebook -- $arg"
   exit 0
 fi
@@ -73,8 +76,8 @@ fi
 npm run build >/dev/null || fail "the build failed; run 'npm run build' to see why"
 
 # 5. Commit, push, PR, baselines.
-git add -- "$dest"
-if [[ -n $(git status --porcelain -- "$dest") ]]; then
+git add -- "$dest" "$groups"
+if [[ -n $(git status --porcelain -- "$dest" "$groups") ]]; then
   if git cat-file -e "HEAD:$dest/notebook.yaml" 2>/dev/null; then
     git commit --quiet -m "content: update the $slug notebook"
   else
