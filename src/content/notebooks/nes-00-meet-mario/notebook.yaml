@@ -1,2 +1,3 @@
 description: "Introduction to NES emulation and how data is represented"
-source: https://github.com/BottomUpAI/notebooks/blob/main/nes/00-meet-mario.ipynb
+source: https://github.com/BottomUpAI/notebooks/blob/main/nes-and-interpretability/nes/00-meet-mario.ipynb
+group: nes-and-interpretability

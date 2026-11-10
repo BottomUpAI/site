@@ -1,3 +1,4 @@
 description: "Working through the Einops Basics tutorial as part of ARENA 0.0"
-source: https://github.com/BottomUpAI/notebooks/blob/main/einops-basics/einops-basics.ipynb
 licence: EINOPS-TUTORIAL-LICENSE
+source: https://github.com/BottomUpAI/notebooks/blob/main/arena-preparation/einops-basics/einops-basics.ipynb
+group: arena-preparation

@@ -13,18 +13,20 @@ const git = (cwd: string, ...args: string[]) => {
   return r.stdout.trim();
 };
 
-/** A notebooks repo checkout with one committed notebook, and a bare "origin" it's pushed to. */
-function notebooksRepo(slug: string, files: Record<string, string> = {}) {
+/** A notebooks repo checkout with one committed notebook, <group>/<slug>/<slug>.ipynb,
+ *  and a bare "origin" it's pushed to. */
+function notebooksRepo(slug: string, files: Record<string, string> = {}, group = "arena") {
   const root = mkdtempSync(join(tmpdir(), "notebooks-"));
   const origin = join(root, "origin.git");
   const repo = join(root, "notebooks");
   spawnSync("git", ["init", "--quiet", "--bare", "--initial-branch=main", origin]);
-  mkdirSync(join(repo, slug), { recursive: true });
+  const dir = group === "" ? join(repo, slug) : join(repo, group, slug);
+  mkdirSync(dir, { recursive: true });
   git(repo, "init", "--quiet", "--initial-branch=main");
   git(repo, "config", "user.email", "t@example.com");
   git(repo, "config", "user.name", "T");
-  writeFileSync(join(repo, slug, `${slug}.ipynb`), '{"nbformat": 4}');
-  for (const [name, text] of Object.entries(files)) writeFileSync(join(repo, slug, name), text);
+  writeFileSync(join(dir, `${slug}.ipynb`), '{"nbformat": 4}');
+  for (const [name, text] of Object.entries(files)) writeFileSync(join(dir, name), text);
   git(repo, "add", "-A");
   git(repo, "commit", "--quiet", "-m", "init");
   // origin is the GitHub URL the scripts derive the page's source link from;
@@ -32,15 +34,20 @@ function notebooksRepo(slug: string, files: Record<string, string> = {}) {
   git(repo, "remote", "add", "origin", "https://github.com/BottomUpAI/notebooks.git");
   git(repo, "config", `url.${origin}.insteadOf`, "https://github.com/BottomUpAI/notebooks.git");
   git(repo, "push", "--quiet", "origin", "main");
-  return { repo, dir: join(repo, slug), origin };
+  return { repo, dir, origin };
 }
 
-/** A scratch "site" holding the scripts, as a git repo on main, pushed to a bare origin. */
+const GROUPS = "- id: arena\n  title: ARENA\n";
+
+/** A scratch "site" holding the scripts and a groups file listing "arena", as a
+ *  git repo on main, pushed to a bare origin. */
 function site() {
   const dir = mkdtempSync(join(tmpdir(), "site-"));
   const origin = mkdtempSync(join(tmpdir(), "site-origin-"));
   spawnSync("git", ["init", "--quiet", "--bare", "--initial-branch=main", origin]);
   cpSync(scripts, join(dir, "scripts"), { recursive: true });
+  mkdirSync(join(dir, "src/content"), { recursive: true });
+  writeFileSync(join(dir, "src/content/notebook-groups.yaml"), GROUPS);
   git(dir, "init", "--quiet", "--initial-branch=main");
   git(dir, "config", "user.email", "t@example.com");
   git(dir, "config", "user.name", "T");
@@ -86,7 +93,8 @@ describe("sync-notebook.sh", () => {
     expect(readFileSync(join(dest, "notebook.yaml"), "utf8")).toBe(
       [
         'description: "[[WRITE: one or two sentences on what the some-notebook notebook is]]"',
-        "source: https://github.com/BottomUpAI/notebooks/blob/main/some-notebook/some-notebook.ipynb",
+        "source: https://github.com/BottomUpAI/notebooks/blob/main/arena/some-notebook/some-notebook.ipynb",
+        "group: arena",
         "licence: UPSTREAM-LICENSE",
         "",
       ].join("\n"),
@@ -100,17 +108,47 @@ describe("sync-notebook.sh", () => {
     expect(readFileSync(join(cwd, "src/content/notebooks/plain/notebook.yaml"), "utf8")).not.toContain("licence");
   });
 
-  test("leaves an existing notebook.yaml alone", () => {
+  test("in an existing notebook.yaml, keeps the description and licence and refreshes source and group", () => {
     const { dir } = notebooksRepo("kept");
     const cwd = site();
     mkdirSync(join(cwd, "src/content/notebooks/kept"), { recursive: true });
-    writeFileSync(join(cwd, "src/content/notebooks/kept/notebook.yaml"), "description: Nathan's words\n");
+    writeFileSync(
+      join(cwd, "src/content/notebooks/kept/notebook.yaml"),
+      "description: Nathan's words\nsource: https://github.com/BottomUpAI/notebooks/blob/main/kept/kept.ipynb\nlicence: L\n",
+    );
     expect(run(cwd, "sync-notebook.sh", dir).status).toBe(0);
-    expect(readFileSync(join(cwd, "src/content/notebooks/kept/notebook.yaml"), "utf8")).toBe("description: Nathan's words\n");
+    expect(readFileSync(join(cwd, "src/content/notebooks/kept/notebook.yaml"), "utf8")).toBe(
+      [
+        "description: Nathan's words",
+        "licence: L",
+        "source: https://github.com/BottomUpAI/notebooks/blob/main/arena/kept/kept.ipynb",
+        "group: arena",
+        "",
+      ].join("\n"),
+    );
+    expect(readFileSync(join(cwd, "src/content/notebook-groups.yaml"), "utf8")).toBe(GROUPS);
+  });
+
+  test("a new group is added to the groups file with a title to write", () => {
+    const { dir } = notebooksRepo("first", {}, "new-topic");
+    const cwd = site();
+    const r = run(cwd, "sync-notebook.sh", dir);
+    expect(r.status, r.out).toBe(0);
+    expect(readFileSync(join(cwd, "src/content/notebook-groups.yaml"), "utf8")).toBe(
+      GROUPS + '- id: new-topic\n  title: "[[WRITE: the new-topic group\'s title on the Notebooks index]]"\n',
+    );
+    expect(readFileSync(join(cwd, "src/content/notebooks/first/notebook.yaml"), "utf8")).toContain("group: new-topic\n");
+  });
+
+  test("rejects a notebook that isn't in a group folder", () => {
+    const { dir } = notebooksRepo("loose", {}, "");
+    const r = run(site(), "sync-notebook.sh", dir);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain("isn't in a group folder");
   });
 
   test("a notebook named by its file, in a directory of several, gets a slug from both", () => {
-    const { dir } = notebooksRepo("nes", { "00-meet-mario.ipynb": '{"mario": 0}', "01-next.ipynb": "{}" });
+    const { dir } = notebooksRepo("nes", { "00-meet-mario.ipynb": '{"mario": 0}', "01-next.ipynb": "{}" }, "nes-and-interp");
     const cwd = site();
     const r = run(cwd, "sync-notebook.sh", join(dir, "00-meet-mario.ipynb"));
     expect(r.status, r.out).toBe(0);
@@ -118,7 +156,7 @@ describe("sync-notebook.sh", () => {
     expect(readFileSync(join(dest, "00-meet-mario.ipynb"), "utf8")).toBe('{"mario": 0}');
     expect(existsSync(join(dest, "01-next.ipynb"))).toBe(false);
     expect(readFileSync(join(dest, "notebook.yaml"), "utf8")).toContain(
-      "source: https://github.com/BottomUpAI/notebooks/blob/main/nes/00-meet-mario.ipynb",
+      "source: https://github.com/BottomUpAI/notebooks/blob/main/nes-and-interp/nes/00-meet-mario.ipynb\ngroup: nes-and-interp\n",
     );
   });
 
@@ -159,7 +197,7 @@ describe("publish-notebook.sh", () => {
     const cwd = site();
     const r = run(cwd, "publish-notebook.sh", join(dir, "00-a.ipynb"));
     expect(r.status, r.out).toBe(0);
-    expect(r.out).toContain("Write the description");
+    expect(r.out).toContain("Replace the [[WRITE: …]] markers");
     expect(git(cwd, "rev-parse", "--abbrev-ref", "HEAD")).toBe("notebook/series-00-a");
   });
 
@@ -178,7 +216,7 @@ describe("publish-notebook.sh", () => {
     const r = run(cwd, "publish-notebook.sh", dir);
     expect(r.out).not.toContain("unbound variable");
     expect(r.status, r.out).toBe(0);
-    expect(r.out).toContain("Write the description");
+    expect(r.out).toContain("Replace the [[WRITE: …]] markers");
     expect(git(cwd, "rev-parse", "--abbrev-ref", "HEAD")).toBe("notebook/fresh");
     expect(r.calls).toEqual([]);
   });
@@ -186,7 +224,7 @@ describe("publish-notebook.sh", () => {
   test("after the description is written, a second run gets past the clean-tree check to the build", () => {
     const { dir } = notebooksRepo("second");
     const cwd = site();
-    expect(run(cwd, "publish-notebook.sh", dir).out).toContain("Write the description");
+    expect(run(cwd, "publish-notebook.sh", dir).out).toContain("Replace the [[WRITE: …]] markers");
     const meta = join(cwd, "src/content/notebooks/second/notebook.yaml");
     writeFileSync(meta, readFileSync(meta, "utf8").replace(/"\[\[WRITE:[^"]*"/, '"Nathan\'s words."'));
     const r = runWith({ npm: 1 }, cwd, "publish-notebook.sh", dir);

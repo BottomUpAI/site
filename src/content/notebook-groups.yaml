@@ -1,0 +1,7 @@
+# The sections of the Notebooks index, in the order they appear. Each id is a
+# top-level folder in BottomUpAI/notebooks; scripts/sync-notebook.sh adds a
+# new one (with a [[WRITE: …]] title) the first time a notebook from it is synced.
+- id: arena-preparation
+  title: ARENA Preparation
+- id: nes-and-interpretability
+  title: NES and Interpretability

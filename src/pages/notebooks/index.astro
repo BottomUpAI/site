@@ -2,27 +2,44 @@
 import { getCollection } from "astro:content";
 import Text from "../../components/Text.astro";
 import Base from "../../layouts/Base.astro";
+import { groupNotebooks } from "../../lib/notebook-groups";
 
 const notebooks = (await getCollection("notebooks")).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const sections = groupNotebooks(notebooks);
 ---
 
 <Base title="Notebooks · Nathan Douglas" description="Jupyter notebooks and similar artifacts" path="/notebooks/">
   <h1>Notebooks</h1>
-  <ul class="notebooks">
-    {
-      notebooks.map(({ id, data }) => (
-        <li>
-          <a href={`/notebooks/${id}/`} set:html={data.titleHtml} />
-          <p>
-            <Text value={data.description} />
-          </p>
-        </li>
-      ))
-    }
-  </ul>
+  {
+    sections.map(({ group, notebooks }) => (
+      <section aria-labelledby={`group-${group.id}`}>
+        <h2 id={`group-${group.id}`}>
+          <Text value={group.title} />
+        </h2>
+        <ul class="notebooks">
+          {notebooks.map(({ id, data }) => (
+            <li>
+              <a href={`/notebooks/${id}/`} set:html={data.titleHtml} />
+              <p>
+                <Text value={data.description} />
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
 </Base>
 
 <style>
+  section + section {
+    margin-top: var(--space-6);
+  }
+
+  h2 {
+    margin-bottom: var(--space-3);
+  }
+
   .notebooks {
     list-style: none;
     margin: 0;
