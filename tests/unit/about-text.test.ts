@@ -12,17 +12,17 @@ const base = {
   ],
 };
 
-test("Markdown: one line per entry, '- [Title](url) - detail', newest first as given", () => {
+test("Markdown: one line per entry, '- date: [Title](url) - detail', newest first as given", () => {
   const md = aboutMarkdown(base);
-  expect(md).toContain("- [Example](https://example.org/) - Example description\n- Plain\n");
+  expect(md).toContain("- 2026-11: [Example](https://example.org/) - Example description\n- 2026-10: Plain\n");
   expect(md).toContain("# Nathan Douglas\n\nhttps://bottomuplabs.ai/about/\n\nFirst paragraph, with [a link](https://l.example).");
   expect(md).toContain("- **Inside a model:** *mech* interp, `code`.");
   expect(md.trimEnd().endsWith("[Résumé (PDF)](https://x.example/resume.pdf)")).toBe(true);
 });
 
-test("plain text: '- Title (url) - detail', and no Markdown left in the body", () => {
+test("plain text: '- date: Title (url) - detail', and no Markdown left in the body", () => {
   const txt = aboutPlain(base);
-  expect(txt).toContain("- Example (https://example.org/) - Example description\n- Plain\n");
+  expect(txt).toContain("- 2026-11: Example (https://example.org/) - Example description\n- 2026-10: Plain\n");
   expect(txt).toContain("Nathan Douglas\n\nhttps://bottomuplabs.ai/about/\n\nFirst paragraph, with a link (https://l.example).");
   expect(txt).toContain("- Inside a model: mech interp, code.");
   expect(txt).not.toMatch(/[*`#\[]/);

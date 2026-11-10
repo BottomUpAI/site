@@ -14,12 +14,12 @@ export interface AboutText {
 
 function entryMarkdown(e: TimelineEntry): string {
   const title = e.href ? `[${e.title}](${e.href})` : e.title;
-  return `- ${title}${e.detail ? ` - ${e.detail}` : ""}`;
+  return `- ${e.date}: ${title}${e.detail ? ` - ${e.detail}` : ""}`;
 }
 
 function entryPlain(e: TimelineEntry): string {
   const title = e.href ? `${e.title} (${e.href})` : e.title;
-  return `- ${title}${e.detail ? ` - ${e.detail}` : ""}`;
+  return `- ${e.date}: ${title}${e.detail ? ` - ${e.detail}` : ""}`;
 }
 
 // Enough Markdown-to-text for prose: links become "text (url)", and emphasis
