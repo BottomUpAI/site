@@ -27,7 +27,14 @@ aws s3 sync dist "s3://$SITE_BUCKET" ${dryrun[@]+"${dryrun[@]}"} \
   --cache-control "public, max-age=31536000, immutable"
 
 aws s3 sync dist "s3://$SITE_BUCKET" ${dryrun[@]+"${dryrun[@]}"} \
-  --exclude "_astro/*" --delete \
+  --exclude "_astro/*" --exclude "*.txt" --delete \
+  --cache-control "public, max-age=0, must-revalidate"
+
+# Plain-text exports (Markdown inside, so .txt shows in the browser instead of
+# downloading). S3 guesses text/plain with no charset, which garbles UTF-8.
+aws s3 sync dist "s3://$SITE_BUCKET" ${dryrun[@]+"${dryrun[@]}"} \
+  --exclude "*" --include "*.txt" --delete \
+  --content-type "text/plain; charset=utf-8" \
   --cache-control "public, max-age=0, must-revalidate"
 
 if [[ ${#dryrun[@]} -gt 0 ]]; then
