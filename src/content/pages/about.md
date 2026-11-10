@@ -8,6 +8,10 @@ resume: "https://ndouglas.github.io/resume/resume.pdf"
 #     detail: "…"          # optional, plain text under the title
 timeline:
   - date: "2026-11"
+    title: "Is This MNIST? Training Choices Steer What LLM Weight Readers Conclude"
+    href: "https://github.com/ndouglas/weight-stego"
+    detail: "Solo project in the Swarm Alignment Hackathon (AIAF and Apart Research). Training with Adam instead of SGD made frontier LLMs auditing a net's weights misidentify its training data, with no weight edits. One check re-derives every reported number."
+  - date: "2026-11"
     title: "ARENA AI safety curriculum"
     href: "https://ndouglas.github.io/ARENA_materials/"
     detail: "Started working through it independently and in public."
