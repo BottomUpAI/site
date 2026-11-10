@@ -27,7 +27,14 @@ aws s3 sync dist "s3://$SITE_BUCKET" ${dryrun[@]+"${dryrun[@]}"} \
   --cache-control "public, max-age=31536000, immutable"
 
 aws s3 sync dist "s3://$SITE_BUCKET" ${dryrun[@]+"${dryrun[@]}"} \
-  --exclude "_astro/*" --delete \
+  --exclude "_astro/*" --exclude "*.txt" --exclude "*.md" --delete \
+  --cache-control "public, max-age=0, must-revalidate"
+
+# Text exports (/about.md and /about.txt), as text/plain so browsers show them
+# instead of downloading, with a charset (S3's guess has none, which garbles UTF-8).
+aws s3 sync dist "s3://$SITE_BUCKET" ${dryrun[@]+"${dryrun[@]}"} \
+  --exclude "*" --include "*.txt" --include "*.md" --delete \
+  --content-type "text/plain; charset=utf-8" \
   --cache-control "public, max-age=0, must-revalidate"
 
 if [[ ${#dryrun[@]} -gt 0 ]]; then

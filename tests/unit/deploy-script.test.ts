@@ -38,11 +38,11 @@ test("--dryrun syncs with --dryrun and never invalidates", () => {
   const r = deploy("--dryrun");
   expect(r.out).not.toContain("unbound variable");
   expect(r.status).toBe(0);
-  expect(r.calls).toHaveLength(2);
+  expect(r.calls).toHaveLength(3);
   expect(r.calls.every((c) => c.startsWith("s3 sync dist s3://b --dryrun"))).toBe(true);
 });
 
-test("a real deploy syncs assets first, then the rest with --delete, then invalidates and waits", () => {
+test("a real deploy syncs assets, then the rest with --delete, then text exports as UTF-8, then invalidates and waits", () => {
   const r = deploy();
   expect(r.out).not.toContain("unbound variable");
   expect(r.status).toBe(0);
@@ -50,6 +50,9 @@ test("a real deploy syncs assets first, then the rest with --delete, then invali
   expect(r.calls[0]).toContain("immutable");
   expect(r.calls[1]).toContain("--delete");
   expect(r.calls[1]).toContain("max-age=0");
-  expect(r.calls[2]).toContain("create-invalidation --distribution-id D --paths /*");
-  expect(r.calls[3]).toContain("wait invalidation-completed --distribution-id D --id I123");
+  expect(r.calls[1]).toContain("--exclude *.txt --exclude *.md");
+  expect(r.calls[2]).toContain("--include *.txt --include *.md");
+  expect(r.calls[2]).toContain("--content-type text/plain; charset=utf-8");
+  expect(r.calls[3]).toContain("create-invalidation --distribution-id D --paths /*");
+  expect(r.calls[4]).toContain("wait invalidation-completed --distribution-id D --id I123");
 });
