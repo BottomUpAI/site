@@ -50,8 +50,8 @@ test("a real deploy syncs assets, then the rest with --delete, then text exports
   expect(r.calls[0]).toContain("immutable");
   expect(r.calls[1]).toContain("--delete");
   expect(r.calls[1]).toContain("max-age=0");
-  expect(r.calls[1]).toContain("--exclude *.txt");
-  expect(r.calls[2]).toContain("--include *.txt");
+  expect(r.calls[1]).toContain("--exclude *.txt --exclude *.md");
+  expect(r.calls[2]).toContain("--include *.txt --include *.md");
   expect(r.calls[2]).toContain("--content-type text/plain; charset=utf-8");
   expect(r.calls[3]).toContain("create-invalidation --distribution-id D --paths /*");
   expect(r.calls[4]).toContain("wait invalidation-completed --distribution-id D --id I123");
