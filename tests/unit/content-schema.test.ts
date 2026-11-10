@@ -67,9 +67,15 @@ describe("timeline", () => {
     expect(aboutSchema.safeParse(withDate("2026-13")).success).toBe(false);
   });
 
-  test("accepts a year or a year-month", () => {
+  test("accepts a year, a year-month or a full date", () => {
     expect(aboutSchema.safeParse(withDate("2026")).success).toBe(true);
     expect(aboutSchema.safeParse(withDate("2026-11")).success).toBe(true);
+    expect(aboutSchema.safeParse(withDate("2026-11-08")).success).toBe(true);
+  });
+
+  test("rejects day 32 and a one-digit day", () => {
+    expect(aboutSchema.safeParse(withDate("2026-11-32")).success).toBe(false);
+    expect(aboutSchema.safeParse(withDate("2026-11-8")).success).toBe(false);
   });
 
   test("an entry has a title and may add a detail", () => {

@@ -17,8 +17,10 @@ export const linkSchema = z.object({
 });
 
 export const timelineEntrySchema = z.object({
-  // A year, or a year and month.
-  date: z.string().regex(/^\d{4}(-(0[1-9]|1[0-2]))?$/, "must be YYYY or YYYY-MM"),
+  // A year, a year and month, or a full date.
+  date: z
+    .string()
+    .regex(/^\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?)?$/, "must be YYYY, YYYY-MM or YYYY-MM-DD"),
   // The title is the link (when there is one); the detail is plain text under it.
   title: z.string().min(1),
   href: httpsUrl.optional(),
