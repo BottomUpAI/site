@@ -1,5 +1,6 @@
 ---
 import { hasMarker } from "../lib/markers";
+import { obfuscatedMailto } from "../lib/obfuscate";
 import type { Link } from "../lib/schemas";
 import Text from "./Text.astro";
 
@@ -9,8 +10,9 @@ interface Props {
 
 const { links } = Astro.props;
 
-// The email link shows the address itself, so it can be read and copied.
-const text = (link: Link) => (link.href.startsWith("mailto:") ? link.href.slice("mailto:".length) : link.label);
+// The email link shows the address itself, so it can be read and copied. It is
+// written as character references to keep it away from simple harvesters.
+const mailto = (link: Link) => (link.href.startsWith("mailto:") ? link.href.slice("mailto:".length) : null);
 ---
 
 <ul class="link-row">
@@ -21,8 +23,10 @@ const text = (link: Link) => (link.href.startsWith("mailto:") ? link.href.slice(
           <span>
             {link.label} <Text value={link.href} />
           </span>
+        ) : mailto(link) ? (
+          <Fragment set:html={obfuscatedMailto(mailto(link)!)} />
         ) : (
-          <a href={link.href}>{text(link)}</a>
+          <a href={link.href}>{link.label}</a>
         )}
       </li>
     ))
