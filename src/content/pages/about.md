@@ -1,6 +1,6 @@
 ---
 description: "About Nathan Douglas: nearly fifteen years of production software engineering, a background in philosophy and social science, and the move into AI safety."
-resume: "https://ndouglas.github.io/resume/resume.pdf"
+resume: "https://resume.bottomuplabs.ai/resume.pdf"
 # Dated entries, newest first. Each one looks like:
 #   - date: "YYYY-MM-DD"   # or "YYYY-MM" or "YYYY"
 #     title: "…"           # the link text, kept short
@@ -13,7 +13,7 @@ timeline:
     detail: "Solo project in the Swarm Alignment Hackathon (AIAF and Apart Research). Training with Adam instead of SGD made frontier LLMs auditing a net's weights misidentify its training data, with no weight edits. One check re-derives every reported number."
   - date: "2026-11-02"
     title: "ARENA AI safety curriculum"
-    href: "https://ndouglas.github.io/ARENA_materials/"
+    href: "https://arena.bottomuplabs.ai/"
     detail: "Started working through it independently and in public."
   - date: "2026-10-31"
     title: "BlueDot Impact: Technical AI Safety"
