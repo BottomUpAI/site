@@ -63,11 +63,12 @@ if [[ $branch == main ]]; then
 fi
 
 # 3. Sync, and stop while Nathan's words are still missing.
+# (Markers in comments, like the groups file's header, don't count.)
 scripts/sync-notebook.sh "$arg"
-if grep -rqiE '\[\[[[:space:]]*write[[:space:]]*:' "$dest" "$groups"; then
+if grep -rqiE '^[^#]*\[\[[[:space:]]*write[[:space:]]*:' "$dest" "$groups"; then
   echo
   echo "Replace the [[WRITE: …]] markers in these with your words:"
-  grep -rliE '\[\[[[:space:]]*write[[:space:]]*:' "$dest" "$groups" | sed 's/^/  /'
+  grep -rliE '^[^#]*\[\[[[:space:]]*write[[:space:]]*:' "$dest" "$groups" | sed 's/^/  /'
   echo "then run this again: npm run notebook -- $arg"
   exit 0
 fi

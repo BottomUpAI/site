@@ -37,7 +37,9 @@ function notebooksRepo(slug: string, files: Record<string, string> = {}, group =
   return { repo, dir, origin };
 }
 
-const GROUPS = "- id: arena\n  title: ARENA\n";
+// Like the real groups file, its header comment names the [[WRITE: …]] marker,
+// which mustn't count as one.
+const GROUPS = "# A new group gets a [[WRITE: …]] title.\n- id: arena\n  title: ARENA\n";
 
 /** A scratch "site" holding the scripts and a groups file listing "arena", as a
  *  git repo on main, pushed to a bare origin. */
