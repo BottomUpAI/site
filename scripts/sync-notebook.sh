@@ -5,8 +5,9 @@
 #   scripts/sync-notebook.sh ../notebooks/einops-basics
 #   scripts/sync-notebook.sh ../notebooks/nes/00-meet-mario.ipynb
 #
-# Copies the notebook (a directory's <dir name>.ipynb, or the file named) and any
-# licence file beside it (*LICENSE*, *LICENCE*) to src/content/notebooks/<slug>/;
+# Copies the notebook (a directory's <dir name>.ipynb, or the file named), any
+# licence file beside it (*LICENSE*, *LICENCE*), and the images its Markdown
+# cells show (scripts/notebook-images.mjs) to src/content/notebooks/<slug>/;
 # scripts/notebook-path.sh says how the slug is chosen.
 #
 # The first time, writes notebook.yaml with the GitHub source URL (worked out
@@ -38,6 +39,13 @@ for file in "$src"/*LICENSE* "$src"/*LICENCE*; do
   licences+=("$(basename "$file")")
   echo "copied $file -> $dest/"
 done
+
+while IFS= read -r image; do
+  [[ -f $src/$image ]] || { echo "sync-notebook: $nb_file shows $image, which isn't in $src" >&2; exit 1; }
+  mkdir -p "$(dirname "$dest/$image")"
+  cp "$src/$image" "$dest/$image"
+  echo "copied $src/$image -> $dest/$image"
+done < <(node "$(dirname "$0")/notebook-images.mjs" "$ipynb")
 
 # Where it is on GitHub, and its group: the top-level folder it's in there.
 #   https://github.com/<owner>/<repo>/blob/main/<group>/.../<file>.ipynb

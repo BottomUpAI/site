@@ -147,6 +147,56 @@ describe("renderNotebook", () => {
     const result = await render(markdown("# T"), markdown("[[WRITE: intro]]"));
     expect(result.cells[0]).toMatchObject({ html: expect.stringContaining('class="write-marker"') });
   });
+
+  test("a title that starts with a number stays a title, not a list", async () => {
+    const numbered = await render(markdown("# 00. PyTorch Fundamentals"));
+    expect(numbered.titleHtml).toBe("00. PyTorch Fundamentals");
+    const bulleted = await render(markdown("# - dash first"));
+    expect(bulleted.titleHtml).toBe("- dash first");
+  });
+});
+
+describe("renderNotebook, images in Markdown cells", () => {
+  // A 3×2 GIF header, enough for its size.
+  const GIF = Buffer.concat([Buffer.from("GIF89a"), Buffer.from([3, 0, 2, 0]), Buffer.alloc(16)]);
+  const SVG = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"></svg>');
+  const files: Record<string, Buffer> = {
+    "images/tiny.png": Buffer.from(PNG, "base64"),
+    "images/anim.gif": GIF,
+    "badge.svg": SVG,
+  };
+  const renderWith = (...cells: CellJson[]) =>
+    renderNotebook(notebook(...cells), "test.ipynb", { base: "/notebooks/t/", readFile: (path) => files[path] });
+
+  test("a relative image is served by content hash from the page's directory, with its size", async () => {
+    const result = await renderWith(markdown("# T"), markdown("![a tiny thing](images/tiny.png)"));
+    const html = result.cells[0]?.html ?? "";
+    expect(html).toMatch(/<img src="\/notebooks\/t\/[0-9a-f]{16}\.png" alt="a tiny thing"/);
+    expect(html).toContain('width="1" height="1" loading="lazy" decoding="async"');
+    expect(result.images).toEqual([{ file: expect.stringMatching(/^[0-9a-f]{16}\.png$/), base64: PNG }]);
+  });
+
+  test("raw HTML <img> tags, GIFs and SVGs work too", async () => {
+    const result = await renderWith(
+      markdown("# T"),
+      markdown('<a href="https://example.com"><img src="badge.svg" alt="badge"/></a>\n\n![g](./images/anim.gif)'),
+    );
+    const html = result.cells[0]?.html ?? "";
+    expect(html).toMatch(/src="\/notebooks\/t\/[0-9a-f]{16}\.svg" alt="badge" width="117" height="20"/);
+    expect(html).toMatch(/src="\/notebooks\/t\/[0-9a-f]{16}\.gif" alt="g" width="3" height="2"/);
+    expect(result.images.map((i) => i.file.split(".")[1]).sort()).toEqual(["gif", "svg"]);
+  });
+
+  test("a remote image is an error, since the site's CSP would block it", async () => {
+    await expect(renderWith(markdown("# T"), markdown("![x](https://example.com/x.png)"))).rejects.toThrow(
+      /cell 2: image https:\/\/example.com\/x.png isn't in the notebook's directory/,
+    );
+  });
+
+  test("a missing image, or one outside the notebook's directory, is an error", async () => {
+    await expect(renderWith(markdown("# T"), markdown("![x](images/nope.png)"))).rejects.toThrow(/cell 2: no image images\/nope.png/);
+    await expect(renderWith(markdown("# T"), markdown("![x](../tiny.png)"))).rejects.toThrow(/isn't in the notebook's directory/);
+  });
 });
 
 describe("vendored notebooks", () => {

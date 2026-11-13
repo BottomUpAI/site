@@ -2,6 +2,7 @@
 //
 //   <slug>/<anything>.ipynb   the notebook (exactly one)
 //   <slug>/notebook.yaml      description, source URL, optional licence file
+//   <slug>/<images>           any images its Markdown cells show, by relative path
 //
 // The entry id is the directory name, which is also the page's URL slug.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -9,7 +10,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Loader } from "astro/loaders";
 import { parse } from "yaml";
-import { renderNotebook } from "./notebook";
+import { readFrom, renderNotebook } from "./notebook";
 import { notebookMetaSchema } from "./schemas";
 
 export function notebookLoader({ base }: { base: string }): Loader {
@@ -39,13 +40,18 @@ export function notebookLoader({ base }: { base: string }): Loader {
           const licenceText = licence === undefined ? undefined : readFileSync(join(path, licence), "utf8").trim();
 
           const json = readFileSync(ipynb, "utf8");
-          const rendered = await renderNotebook(json, relative(fileURLToPath(config.root), ipynb));
+          const rendered = await renderNotebook(json, relative(fileURLToPath(config.root), ipynb), {
+            base: `/notebooks/${id}/`,
+            readFile: readFrom(path),
+          });
           const data = await parseData({
             id,
             data: { ...rest, ...(licenceText === undefined ? {} : { licenceText }), ...rendered },
             filePath: relative(fileURLToPath(config.root), ipynb),
           });
-          store.set({ id, data, digest: generateDigest(json + JSON.stringify(meta.data) + (licenceText ?? "")) });
+          // Image file names are content hashes, so they stand in for the images' bytes.
+          const imageFiles = rendered.images.map((image) => image.file).join();
+          store.set({ id, data, digest: generateDigest(json + JSON.stringify(meta.data) + (licenceText ?? "") + imageFiles) });
         }
       }
 
