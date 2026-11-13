@@ -1,0 +1,4 @@
+description: "Daniel Bourke's PyTorch Fundamentals, worked through: tensors, their operations, and running them on a GPU"
+licence: LEARN-PYTORCH-LICENSE
+source: https://github.com/BottomUpAI/notebooks/blob/main/arena-preparation/pytorch-fundamentals/pytorch-fundamentals.ipynb
+group: arena-preparation
