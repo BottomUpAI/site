@@ -13,11 +13,15 @@ for (const colorScheme of ["light", "dark"] as const) {
 
       for (const { name, path } of PAGES) {
         test(`${name}`, async ({ page }) => {
+          // A long notebook page (pytorch-fundamentals is ~44k px tall) takes
+          // ~10s to capture full-page, twice over the 5s expect default.
+          test.setTimeout(60_000);
           await page.goto(path, { waitUntil: "networkidle" });
           await page.evaluate(() => document.fonts.ready);
           await expect(page).toHaveScreenshot(`${name}-${colorScheme}-${viewport.label}.png`, {
             fullPage: true,
             maxDiffPixelRatio: 0.001,
+            timeout: 30_000,
           });
         });
       }
