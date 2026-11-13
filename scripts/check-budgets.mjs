@@ -22,10 +22,11 @@ export const BUDGETS = {
 // Notebook pages (/notebooks/<slug>/) carry every highlighted code cell and
 // every output image the notebook has, shipped as the original PNGs, so they
 // get a larger allowance for those. einops-basics, the first, is about 106 KB
-// of HTML and 303 KB of images.
+// of HTML and 303 KB of images; pytorch-fundamentals (189 cells), the longest
+// so far, is about 185 KB of HTML.
 export const NOTEBOOK_BUDGETS = {
   ...BUDGETS,
-  html: 160 * KB,
+  html: 200 * KB,
   images: 400 * KB,
   total: 750 * KB,
 };
