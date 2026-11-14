@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
@@ -26,7 +26,10 @@ function notebooksRepo(slug: string, files: Record<string, string> = {}, group =
   git(repo, "config", "user.email", "t@example.com");
   git(repo, "config", "user.name", "T");
   writeFileSync(join(dir, `${slug}.ipynb`), '{"nbformat": 4}');
-  for (const [name, text] of Object.entries(files)) writeFileSync(join(dir, name), text);
+  for (const [name, text] of Object.entries(files)) {
+    mkdirSync(dirname(join(dir, name)), { recursive: true });
+    writeFileSync(join(dir, name), text);
+  }
   git(repo, "add", "-A");
   git(repo, "commit", "--quiet", "-m", "init");
   // origin is the GitHub URL the scripts derive the page's source link from;
@@ -37,7 +40,9 @@ function notebooksRepo(slug: string, files: Record<string, string> = {}, group =
   return { repo, dir, origin };
 }
 
-const GROUPS = "- id: arena\n  title: ARENA\n";
+// Like the real groups file, its header comment names the [[WRITE: …]] marker,
+// which mustn't count as one.
+const GROUPS = "# A new group gets a [[WRITE: …]] title.\n- id: arena\n  title: ARENA\n";
 
 /** A scratch "site" holding the scripts and a groups file listing "arena", as a
  *  git repo on main, pushed to a bare origin. */
@@ -99,6 +104,29 @@ describe("sync-notebook.sh", () => {
         "",
       ].join("\n"),
     );
+  });
+
+  test("copies the images its Markdown cells show, keeping their paths", () => {
+    const showing = JSON.stringify({
+      nbformat: 4,
+      cells: [{ cell_type: "markdown", source: ["![a](images/a.webp)\n", '<img src="b.svg" alt="b"/> ![r](https://x.org/r.png)'] }],
+    });
+    const { dir } = notebooksRepo("pictures", { "pictures.ipynb": showing, "images/a.webp": "A", "b.svg": "B", "unused.png": "U" });
+    const cwd = site();
+    const r = run(cwd, "sync-notebook.sh", dir);
+    expect(r.status).toBe(0);
+    const dest = join(cwd, "src/content/notebooks/pictures");
+    expect(readFileSync(join(dest, "images/a.webp"), "utf8")).toBe("A");
+    expect(readFileSync(join(dest, "b.svg"), "utf8")).toBe("B");
+    expect(existsSync(join(dest, "unused.png"))).toBe(false);
+  });
+
+  test("an image it shows that isn't there stops it", () => {
+    const showing = JSON.stringify({ nbformat: 4, cells: [{ cell_type: "markdown", source: "![a](gone.png)" }] });
+    const { dir } = notebooksRepo("missing", { "missing.ipynb": showing });
+    const r = run(site(), "sync-notebook.sh", dir);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain("shows gone.png, which isn't in");
   });
 
   test("with no licence file, notebook.yaml names none", () => {
@@ -179,6 +207,24 @@ describe("publish-notebook.sh", () => {
   test("refuses a notebook with uncommitted changes", () => {
     const { dir } = notebooksRepo("dirty");
     writeFileSync(join(dir, "dirty.ipynb"), '{"nbformat": 4, "changed": true}');
+    const r = run(site(), "publish-notebook.sh", dir);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain("uncommitted changes");
+  });
+
+  test("refuses a notebook showing an image that isn't committed", () => {
+    const showing = JSON.stringify({ nbformat: 4, cells: [{ cell_type: "markdown", source: "![a](new.png)" }] });
+    const { dir } = notebooksRepo("uncommitted-image", { "uncommitted-image.ipynb": showing });
+    writeFileSync(join(dir, "new.png"), "N");
+    const r = run(site(), "publish-notebook.sh", dir);
+    expect(r.status).toBe(1);
+    expect(r.out).toContain("shows new.png, which isn't committed");
+  });
+
+  test("refuses a notebook whose image has uncommitted changes", () => {
+    const showing = JSON.stringify({ nbformat: 4, cells: [{ cell_type: "markdown", source: "![a](a.png)" }] });
+    const { dir } = notebooksRepo("changed-image", { "changed-image.ipynb": showing, "a.png": "A" });
+    writeFileSync(join(dir, "a.png"), "A2");
     const r = run(site(), "publish-notebook.sh", dir);
     expect(r.status).toBe(1);
     expect(r.out).toContain("uncommitted changes");

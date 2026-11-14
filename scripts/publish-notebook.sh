@@ -29,11 +29,15 @@ ipynb=$nb_file
 dest="src/content/notebooks/$slug"
 groups=src/content/notebook-groups.yaml
 fail() { echo "publish-notebook: $*" >&2; exit 1; }
-# What gets published from $src: the notebook and its licence files. Other
-# notebooks in the same directory can be mid-edit.
+# What gets published from $src: the notebook, its licence files, and the
+# images it shows. Other notebooks in the same directory can be mid-edit.
 published=("$ipynb" "*LICENSE*" "*LICENCE*")
 
 [[ -f $src/$ipynb ]] || fail "no $src/$ipynb"
+while IFS= read -r image; do
+  [[ -n $(git -C "$src" ls-files -- "$image") ]] || fail "$src/$ipynb shows $image, which isn't committed in its repo"
+  published+=("$image")
+done < <(node "$(dirname "$0")/notebook-images.mjs" "$src/$ipynb")
 
 # 1. The source link must resolve: committed, and on origin/main.
 git -C "$src" fetch --quiet origin main
@@ -63,11 +67,12 @@ if [[ $branch == main ]]; then
 fi
 
 # 3. Sync, and stop while Nathan's words are still missing.
+# (Markers in comments, like the groups file's header, don't count.)
 scripts/sync-notebook.sh "$arg"
-if grep -rqiE '\[\[[[:space:]]*write[[:space:]]*:' "$dest" "$groups"; then
+if grep -rqiE '^[^#]*\[\[[[:space:]]*write[[:space:]]*:' "$dest" "$groups"; then
   echo
   echo "Replace the [[WRITE: …]] markers in these with your words:"
-  grep -rliE '\[\[[[:space:]]*write[[:space:]]*:' "$dest" "$groups" | sed 's/^/  /'
+  grep -rliE '^[^#]*\[\[[[:space:]]*write[[:space:]]*:' "$dest" "$groups" | sed 's/^/  /'
   echo "then run this again: npm run notebook -- $arg"
   exit 0
 fi

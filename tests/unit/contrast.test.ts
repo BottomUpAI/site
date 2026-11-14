@@ -1,8 +1,9 @@
 import { readdirSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { contrast, ensureContrast } from "../../src/lib/contrast";
 import { CODE_BG, SHIKI } from "../../src/lib/shiki";
-import { renderNotebook } from "../../src/lib/notebook";
+import { readFrom, renderNotebook } from "../../src/lib/notebook";
 
 describe("contrast", () => {
   test("matches known WCAG ratios", () => {
@@ -42,7 +43,7 @@ test("every highlighted token in a vendored notebook clears 4.5:1 in both scheme
     // Like the loader, take the one .ipynb in the directory, whatever its name.
     const ipynb = readdirSync(new URL(`${slug}/`, root)).find((f) => f.endsWith(".ipynb"))!;
     const json = readFileSync(new URL(`${slug}/${ipynb}`, root), "utf8");
-    const { cells } = await renderNotebook(json, slug);
+    const { cells } = await renderNotebook(json, slug, { readFile: readFrom(fileURLToPath(new URL(`${slug}/`, root))) });
     const html = cells.map((c) => c.html).join("");
     for (const [, scheme, colour] of html.matchAll(/--shiki-(light|dark):(#[0-9a-f]{6})/gi)) {
       expect(contrast(colour!, CODE_BG[scheme as "light" | "dark"]), `${slug} ${scheme} ${colour}`).toBeGreaterThanOrEqual(4.5);
