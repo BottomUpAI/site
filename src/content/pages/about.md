@@ -7,6 +7,10 @@ resume: "https://resume.bottomuplabs.ai/resume.pdf"
 #     href: "https://…"    # optional
 #     detail: "…"          # optional, plain text under the title
 timeline:
+  - date: "2026-11-15"
+    title: "Did You Get the Roof Checked? Missing-Fact Probes for LLM Decision Briefings"
+    href: "https://github.com/ndouglas/epistemics_sprint"
+    detail: "Solo project in Apart Research's AI x Epistemics Research Sprint. LLM briefings for personal decisions raised decisive missing facts more often than inert ones, but seldom said what to do about a decisive unknown: 30% told the person to find it out."
   - date: "2026-11-08"
     title: "Is This MNIST? Training Choices Steer What LLM Weight Readers Conclude"
     href: "https://github.com/ndouglas/weight-stego"
