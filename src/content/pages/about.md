@@ -26,7 +26,7 @@ timeline:
   - date: "2026-10-25"
     title: "A Legal Warning Can Prevent an LLM Cartel, but Not Break One"
     href: "https://apartresearch.com/sprints/projects/a-legal-warning-can-prevent-an-llm-cartel-but-not-break-one-s3jy"
-    detail: "Solo project in Apart Research's AI Collusion Sprint. Released 350 runs that reproduce the reported numbers, and got a benchmark fix merged upstream."
+    detail: "Solo project in Apart Research's AI Collusion Sprint, placed in the top 25% of submissions. Released 350 runs that reproduce the reported numbers, and got a benchmark fix merged upstream."
   - date: "2026-10-16"
     title: "BlueDot Impact: AGI Strategy"
     href: "https://bluedot.org/courses/agi-strategy"
